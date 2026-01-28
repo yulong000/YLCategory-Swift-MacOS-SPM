@@ -6,7 +6,7 @@
 //
 
 import AppKit
-#if canImport(Sparkle)
+#if OFFLINE && canImport(Sparkle)
 import Sparkle
 #endif
 
@@ -37,7 +37,7 @@ public class YLUpdateManager: NSObject {
     /// 检测更新
     /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
     public func checkForUpdates(background: Bool = true) {
-#if canImport(Sparkle)
+#if OFFLINE && canImport(Sparkle)
         checkSparkleUpdates(background: background)
 #else
         checkAppStoreUpdates(background: background)
@@ -70,7 +70,7 @@ public class YLUpdateManager: NSObject {
     /// 解析xml的 delegate
     private var xmlDelegate = YLUpdateXMLParserDelegate()
     
-#if canImport(Sparkle)
+#if OFFLINE && canImport(Sparkle)
     /// 线下版检测更新控制器
     private lazy var sparkleUpdateController: SPUStandardUpdaterController = {
         let controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: self)
@@ -278,7 +278,7 @@ extension YLUpdateManager {
     }
 }
 
-#if canImport(Sparkle)
+#if OFFLINE && canImport(Sparkle)
 
 extension YLUpdateManager: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     
