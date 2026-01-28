@@ -158,4 +158,15 @@ public extension String {
     /// 拼接扩展名
     func appendingPathExtension(_ str: String) -> String? { (self as NSString).appendingPathExtension(str) }
     
+    /// 转成小写拼音（无声调）
+    var pinyin: String {
+        let mutable = NSMutableString(string: self) as CFMutableString
+        CFStringTransform(mutable, nil, kCFStringTransformToLatin, false)
+        CFStringTransform(mutable, nil, kCFStringTransformStripDiacritics, false)
+        return (mutable as String).replacingOccurrences(of: " ", with: "").lowercased()
+    }
+    
+    /// 拼音首字母
+    var pinyinFirstChar: String { pinyin.split(separator: " ").map { String($0.first!) }.joined() }
+    
 }

@@ -6,6 +6,9 @@
 //
 
 import AppKit
+#if canImport(Sparkle)
+import Sparkle
+#endif
 
 public class YLUpdateManager: NSObject {
     
@@ -34,6 +37,64 @@ public class YLUpdateManager: NSObject {
     /// 检测更新
     /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
     public func checkForUpdates(background: Bool = true) {
+#if canImport(Sparkle)
+        checkSparkleUpdates(background: background)
+#else
+        checkAppStoreUpdates(background: background)
+#endif
+    }
+    
+    // MARK: - Private
+    
+    /// app ID
+    private var appID: String? {
+        didSet {
+            guard let appID = appID, !appID.isEmpty else { return }
+            let countryCode = Locale.current.regionCode?.lowercased() ?? ""
+            appStoreUrl = "itms-apps://itunes.apple.com/cn/app/id" + appID
+            appUpdateUrl = "http://itunes.apple.com/lookup?id=\(appID)&country=\(countryCode)&entity=desktopSoftware"
+            appIntroduceUrl = "https://apps.apple.com/cn/app/id" + appID
+        }
+    }
+    /// 是否可以跳过当前更新版本
+    private var isSkipEnable: Bool = false
+    /// 强制更新xml文件地址
+    private(set) var forceUpdateUrl: String?
+    
+    /// app应用商店地址
+    private(set) var appStoreUrl: String?
+    /// app更新地址
+    private(set) var appUpdateUrl: String?
+    /// app介绍
+    private(set) var appIntroduceUrl: String?
+    /// 解析xml的 delegate
+    private var xmlDelegate = YLUpdateXMLParserDelegate()
+    
+#if canImport(Sparkle)
+    /// 线下版检测更新控制器
+    private lazy var sparkleUpdateController: SPUStandardUpdaterController = {
+        let controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: self)
+        controller.updater.automaticallyChecksForUpdates = true
+        return controller
+    }()
+    
+#endif
+    
+    // MARK: - 国际化
+    
+    static func localize(_ key: String) -> String { NSLocalizedString(key, bundle: .module, comment: "") }
+    static let appName: String = Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String ??
+                                 Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
+                                 Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
+                                 Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
+}
+
+
+// MARK: - app store 版本
+extension YLUpdateManager {
+    
+    // MARK: 检测app store的更新
+    private func checkAppStoreUpdates(background: Bool = true) {
         guard let appID = appID, !appID.isEmpty else { return }
         let task = URLSession.shared.dataTask(with: URL(string: appUpdateUrl!)!) { data, response, error in
             guard let data = data, error == nil else { return }
@@ -76,32 +137,6 @@ public class YLUpdateManager: NSObject {
         }
         task.resume()
     }
-    
-    // MARK: - Private
-    
-    /// app ID
-    private var appID: String? {
-        didSet {
-            guard let appID = appID, !appID.isEmpty else { return }
-            let countryCode = Locale.current.regionCode?.lowercased() ?? ""
-            appStoreUrl = "itms-apps://itunes.apple.com/cn/app/id" + appID
-            appUpdateUrl = "http://itunes.apple.com/lookup?id=\(appID)&country=\(countryCode)&entity=desktopSoftware"
-            appIntroduceUrl = "https://apps.apple.com/cn/app/id" + appID
-        }
-    }
-    /// 是否可以跳过当前更新版本
-    private var isSkipEnable: Bool = false
-    /// 强制更新xml文件地址
-    private(set) var forceUpdateUrl: String?
-    
-    /// app应用商店地址
-    private(set) var appStoreUrl: String?
-    /// app更新地址
-    private(set) var appUpdateUrl: String?
-    /// app介绍
-    private(set) var appIntroduceUrl: String?
-    /// 解析xml的 delegate
-    private var xmlDelegate = YLUpdateXMLParserDelegate()
     
     // MARK: 请求服务器，判断如何升级
     private func requestServerForUpdateWay(_ url: URL, currentVersion: String, appStoreVersion: String, updateInfo: String, background: Bool) {
@@ -241,13 +276,41 @@ public class YLUpdateManager: NSObject {
         }
         NSApp.terminate(nil)
     }
-    
-    // MARK: - 国际化
-    
-    static func localize(_ key: String) -> String { NSLocalizedString(key, bundle: .module, comment: "") }
-    static let appName: String = Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String ??
-                                 Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
-                                 Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
-                                 Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
 }
 
+#if canImport(Sparkle)
+
+extension YLUpdateManager: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
+    
+    /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
+    private func checkSparkleUpdates(background: Bool = true) {
+        if background {
+            updateController.updater.checkForUpdatesInBackground()
+        } else {
+            updateController.updater.checkForUpdates()
+        }
+    }
+    
+    func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
+        print("Sparkle 获取xml文件成功: \(appcast.items.first?.propertiesDictionary ?? [:])")
+    }
+    
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        print("Sparkle 暂无更新");
+    }
+    
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        print("Sparkle 有可用升级:\nVersion: \(item.displayVersionString)\nBuild number: \(item.versionString)\nUrl:\(item.fileURL?.absoluteString ?? "")\nNote: \(item.itemDescriptionFormat ?? "")")
+    }
+    
+    func updater(_ updater: SPUUpdater, userDidMake choice: SPUUserUpdateChoice, forUpdate updateItem: SUAppcastItem, state: SPUUserUpdateState) {
+        switch (choice) {
+        case .skip:     print("Sparkle 用户点击 跳过这个版本");
+        case .install:  print("Sparkle 用户点击 安装更新");
+        case .dismiss:  print("Sparkle 用户点击 稍后提醒");
+        default: break;
+        }
+    }
+}
+
+#endif
