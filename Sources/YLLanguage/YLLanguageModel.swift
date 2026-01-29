@@ -21,31 +21,31 @@ public class YLLanguageModel {
             title = YLLanguage.localize("Follow System")
         case .chineseSimplified:
             code = "zh-Hans"
-            title = "简体中文"
+            title = "🇨🇳 简体中文"
         case .chineseTraditional:
             code = "zh-Hant"
-            title = "繁體中文"
+            title = "🇭🇰 繁體中文"
         case .english:
             code = "en"
-            title = "English"
+            title = "🇬🇧 English"
         case .japanese:
             code = "ja"
-            title = "日本語"
+            title = "🇯🇵 日本語"
         case .korean:
             code = "ko"
-            title = "한국어"
+            title = "🇰🇷 한국어"
         case .spanish:
             code = "es"
-            title = "Español"
+            title = "🇪🇸 Español"
         case .french:
             code = "fr"
-            title = "Français"
+            title = "🇫🇷 Français"
         case .portuguese:
             code = "pt-PT"
-            title = "Português"
+            title = "🇵🇹 Português"
         case .german:
             code = "de"
-            title = "Deutsch"
+            title = "🇩🇪 Deutsch"
         }
     }
 }
