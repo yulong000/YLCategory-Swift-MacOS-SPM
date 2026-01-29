@@ -34,16 +34,6 @@ public class YLUpdateManager: NSObject {
         self.isSkipEnable = isSkipEnable
     }
     
-    /// 检测更新
-    /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
-    public func checkForUpdates(background: Bool = true) {
-#if canImport(Sparkle)
-        checkSparkleUpdates(background: background)
-#else
-        checkAppStoreUpdates(background: background)
-#endif
-    }
-    
     // MARK: - Private
     
     /// app ID
@@ -94,7 +84,7 @@ public class YLUpdateManager: NSObject {
 extension YLUpdateManager {
     
     // MARK: 检测app store的更新
-    private func checkAppStoreUpdates(background: Bool = true) {
+    public func checkAppStoreUpdates(background: Bool = true) {
         guard let appID = appID, !appID.isEmpty else { return }
         let task = URLSession.shared.dataTask(with: URL(string: appUpdateUrl!)!) { data, response, error in
             guard let data = data, error == nil else { return }
@@ -283,7 +273,7 @@ extension YLUpdateManager {
 extension YLUpdateManager: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     
     /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
-    private func checkSparkleUpdates(background: Bool = true) {
+    public func checkSparkleUpdates(background: Bool = true) {
         if background {
             sparkleUpdateController.updater.checkForUpdatesInBackground()
         } else {
