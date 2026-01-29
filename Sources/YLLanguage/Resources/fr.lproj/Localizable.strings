@@ -7,17 +7,7 @@
 */
 
 
-"Follow The System" = "Suivre le système";
-"English" = "Anglais";
-"Chinese Simplified" = "Chinois simplifié";
-"Chinese Traditional" = "Chinois traditionnel";
-"Japanese" = "Japonais";
-"Korean" = "Coréen";
-"French" = "Français";
-"Spanish" = "Espagnol";
-"Portuguese" = "Portugais";
-"Unknown" = "Inconnu";
-
+"Follow System" = "Suivre le système";
 "Kind tips" = "Conseils aimables";
 "Restart app tips" = "Changer la langue nécessite de redémarrer l'application. Voulez-vous redémarrer immédiatement ?";
 "Cancel" = "Annuler";

@@ -18,7 +18,7 @@ public class YLLanguageModel {
         switch type {
         case .system:
             code = ""
-            title = YLLanguage.localize("Follow The System")
+            title = YLLanguage.localize("Follow System")
         case .chineseSimplified:
             code = "zh-Hans"
             title = "简体中文"
