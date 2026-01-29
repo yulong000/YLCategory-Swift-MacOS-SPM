@@ -285,25 +285,25 @@ extension YLUpdateManager: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
     private func checkSparkleUpdates(background: Bool = true) {
         if background {
-            updateController.updater.checkForUpdatesInBackground()
+            sparkleUpdateController.updater.checkForUpdatesInBackground()
         } else {
-            updateController.updater.checkForUpdates()
+            sparkleUpdateController.updater.checkForUpdates()
         }
     }
     
-    func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
+    public func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
         print("Sparkle 获取xml文件成功: \(appcast.items.first?.propertiesDictionary ?? [:])")
     }
     
-    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+    public func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
         print("Sparkle 暂无更新");
     }
     
-    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+    public func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         print("Sparkle 有可用升级:\nVersion: \(item.displayVersionString)\nBuild number: \(item.versionString)\nUrl:\(item.fileURL?.absoluteString ?? "")\nNote: \(item.itemDescriptionFormat ?? "")")
     }
     
-    func updater(_ updater: SPUUpdater, userDidMake choice: SPUUserUpdateChoice, forUpdate updateItem: SUAppcastItem, state: SPUUserUpdateState) {
+    public func updater(_ updater: SPUUpdater, userDidMake choice: SPUUserUpdateChoice, forUpdate updateItem: SUAppcastItem, state: SPUUserUpdateState) {
         switch (choice) {
         case .skip:     print("Sparkle 用户点击 跳过这个版本");
         case .install:  print("Sparkle 用户点击 安装更新");
