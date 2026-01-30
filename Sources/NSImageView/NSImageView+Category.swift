@@ -9,7 +9,8 @@ import Foundation
 import AppKit
 
 public extension NSImageView {
-    // MARK: 图片按比例缩放，填充最短边，裁剪并显示中间部分
+    
+    /// 图片按比例缩放，填充最短边，裁剪并显示中间部分
     func aspectFill() {
         guard let image = image else { return }
         
@@ -45,6 +46,38 @@ public extension NSImageView {
             DispatchQueue.main.async {
                 self.image = resultImage
             }
+        }
+    }
+    
+    /// 通过NSImage构造一个NSImageView，附带一些设置信息
+    convenience init(image: NSImage,
+                     isTemplate: Bool = false,
+                     scaling: NSImageScaling = .scaleProportionallyUpOrDown,
+                     alignment: NSImageAlignment = .alignCenter,
+                     frameStyle: FrameStyle? = nil) {
+        self.init()
+        self.image = image
+        self.image?.isTemplate = isTemplate
+        self.imageScaling = scaling
+        self.imageAlignment = alignment
+        if let frameStyle = frameStyle {
+            self.imageFrameStyle = frameStyle
+        }
+    }
+    
+    /// 通过图片名称构造一个NSImageView，附带一些设置信息
+    convenience init(imageName: String,
+                     isTemplate: Bool = false,
+                     scaling: NSImageScaling = .scaleProportionallyUpOrDown,
+                     alignment: NSImageAlignment = .alignCenter,
+                     frameStyle: FrameStyle? = nil) {
+        self.init()
+        self.image = NSImage(named: imageName)
+        self.image?.isTemplate = isTemplate
+        self.imageScaling = scaling 
+        self.imageAlignment = alignment
+        if let frameStyle = frameStyle {
+            self.imageFrameStyle = frameStyle
         }
     }
 }
