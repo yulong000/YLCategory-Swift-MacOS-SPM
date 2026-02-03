@@ -1,6 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
+@_exported import AppKit
 @_exported import Async
 @_exported import NSAlert
 @_exported import NSButton
@@ -16,6 +17,7 @@
 @_exported import NSScreen
 @_exported import NSString
 @_exported import NSTextField
+@_exported import NSURL
 @_exported import NSView
 @_exported import NSWindow
 @_exported import YLAppleReview

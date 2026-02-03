@@ -20,11 +20,54 @@ public var SystemIsDarkTheme: Bool {
     return false
 }
 /// Document 路径
-public var DocumentPath: String { NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last ?? "" }
+public var DocumentPath: String {
+    let path: String
+    if AppIsSanbox {
+        path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last ?? ""
+    } else {
+        let base = NSSearchPathForDirectoriesInDomains(.applicationSupportDirectory, .userDomainMask, true).last ?? ""
+        let bundleId = Bundle.main.bundleIdentifier ?? App_Name
+        let container = (base as NSString).appendingPathComponent(bundleId)
+        path = (container as NSString).appendingPathComponent("Data")
+    }
+    var isDir: ObjCBool = false
+    if !FileManager.default.fileExists(atPath: path, isDirectory: &isDir) || !isDir.boolValue {
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+    }
+    return path
+}
 /// Library 路径
-public var LibraryPath: String { NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).last ?? "" }
+public var LibraryPath: String {
+    let path: String
+    if AppIsSanbox {
+        path = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).last ?? ""
+    } else {
+        let base = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).last ?? ""
+        let bundleId = Bundle.main.bundleIdentifier ?? App_Name
+        path = (base as NSString).appendingPathComponent(bundleId)
+    }
+    var isDir: ObjCBool = false
+    if !FileManager.default.fileExists(atPath: path, isDirectory: &isDir) || !isDir.boolValue {
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+    }
+    return path
+}
 /// Cache 路径
-public var CachePath: String { NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last ?? "" }
+public var CachePath: String {
+    let path: String
+    if AppIsSanbox {
+        path = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last ?? ""
+    } else {
+        let base = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last ?? ""
+        let bundleId = Bundle.main.bundleIdentifier ?? App_Name
+        path = (base as NSString).appendingPathComponent(bundleId)
+    }
+    var isDir: ObjCBool = false
+    if !FileManager.default.fileExists(atPath: path, isDirectory: &isDir) || !isDir.boolValue {
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+    }
+    return path
+}
 /// app内文件的路径
 public func BundlePath(_ fileName: String) -> String? { Bundle.main.path(forResource: fileName, ofType: nil) }
 
