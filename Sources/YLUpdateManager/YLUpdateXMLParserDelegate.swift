@@ -9,8 +9,8 @@ import Foundation
 
 public class YLUpdateXMLParserDelegate: NSObject, XMLParserDelegate {
     
-    var update: YLUpdateXMLModel? = YLUpdateXMLModel()
-    var currentElement: String? = ""
+    public var update: YLUpdateXMLModel? = YLUpdateXMLModel()
+    private var currentElement: String? = ""
     
     // MARK: 解析开始某个元素
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
@@ -46,21 +46,21 @@ public class YLUpdateXMLParserDelegate: NSObject, XMLParserDelegate {
 }
 
 
-struct YLUpdateXMLModel {
+public struct YLUpdateXMLModel {
     /// app名字
-    var Name: String?
+    public var Name: String?
     /// app的bundle ID
-    var BundleId: String?
+    public var BundleId: String?
     /// 支持最小版本号，小于该版本号的，强制升级
-    var MiniVersion: String?
+    public var MiniVersion: String?
     /// 失效的系统版本号
-    var ExpiredOSVersion: String?
+    public var ExpiredOSVersion: String?
     /// 失效的日期, 格式： yyyy-MM-dd
-    var ExpiredDate: String?
+    public var ExpiredDate: String?
     /// 有新版本，就强制升级
-    var ForceUpdateToTheLatest: Bool?
+    public var ForceUpdateToTheLatest: Bool?
     
-    func toJson() -> [String: Any] {
+    public func toJson() -> [String: Any] {
         return [
             "Name": Name ?? "",
             "BundleId": BundleId ?? "",

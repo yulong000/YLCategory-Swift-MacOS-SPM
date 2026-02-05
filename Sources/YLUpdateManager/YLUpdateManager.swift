@@ -268,7 +268,7 @@ extension YLUpdateManager {
     }
     
     // MARK: 显示强制升级
-    private func showForceUpdateAlert(downloadUrl: String) {
+    public func showForceUpdateAlert(downloadUrl: String) {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.alertStyle = .warning
