@@ -5,7 +5,7 @@
 //  Created by 魏宇龙 on 2026/2/2.
 //
 
-import Foundation
+import AppKit
 
 public extension URL {
     
@@ -24,15 +24,20 @@ public extension URL {
     }
     
     /// 创建目录，如果存在，就替换
-    func createOrReplaceDirectory() {
+    /// - Parameter moveToTrash: 旧文件夹及内容，移除到回收站
+    func createOrReplaceDirectory(moveToTrash: Bool = true) {
         guard isFileURL else { return }
         
         let fm = FileManager.default
         if fm.fileExists(atPath: path) {
-            do {
-                try fm.removeItem(at: self)
-            } catch {
-                print("remove dir '\(self)' error: \(error)")
+            if moveToTrash {
+                NSWorkspace.shared.recycle([self])
+            } else {
+                do {
+                    try fm.removeItem(at: self)
+                } catch {
+                    print("remove dir '\(self)' error: \(error)")
+                }
             }
         }
         do {
@@ -42,19 +47,38 @@ public extension URL {
         }
     }
     
+    /// 创建文件，如果不存在就创建
+    /// - Parameters:
+    ///   - contents: 文件内容
+    ///   - attributes: 文件属性
+    func createFileIfNeeded(contents: Data? = nil, attributes: [FileAttributeKey: Any]? = nil) {
+        guard isFileURL else { return }
+        
+        let fm = FileManager.default
+        if fm.fileExists(atPath: path) { return }
+        if !fm.createFile(atPath: path, contents: contents, attributes: attributes) {
+            print("create file '\(self)' failed")
+        }
+    }
+    
     /// 创建文件，如果存在，就替换
     /// - Parameters:
     ///   - contents: 文件内容
     ///   - attributes: 文件属性
-    func createOrReplaceFile(contents: Data? = nil, attributes: [FileAttributeKey: Any]? = nil) {
+    ///   - moveToTrash: 移除到回收站
+    func createOrReplaceFile(contents: Data? = nil, attributes: [FileAttributeKey: Any]? = nil, moveToTrash: Bool = true) {
         guard isFileURL else { return }
         
         let fm = FileManager.default
         if fm.fileExists(atPath: path) {
-            do {
-                try fm.removeItem(at: self)
-            } catch {
-                print("remove file '\(self)' error: \(error)")
+            if moveToTrash {
+                NSWorkspace.shared.recycle([self])
+            } else {
+                do {
+                    try fm.removeItem(at: self)
+                } catch {
+                    print("remove file '\(self)' error: \(error)")
+                }
             }
         }
         if !fm.createFile(atPath: path, contents: contents, attributes: attributes) {
