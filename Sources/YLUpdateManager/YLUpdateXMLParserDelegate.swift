@@ -7,18 +7,18 @@
 
 import Foundation
 
-class YLUpdateXMLParserDelegate: NSObject, XMLParserDelegate {
+public class YLUpdateXMLParserDelegate: NSObject, XMLParserDelegate {
     
     var update: YLUpdateXMLModel? = YLUpdateXMLModel()
     var currentElement: String? = ""
     
     // MARK: 解析开始某个元素
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
+    public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         currentElement = elementName
     }
     
     // MARK: 读取元素内容
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
+    public func parser(_ parser: XMLParser, foundCharacters string: String) {
         guard let currentElement = currentElement else { return }
         switch currentElement {
         case "Name":                    update?.Name = string
@@ -32,15 +32,15 @@ class YLUpdateXMLParserDelegate: NSObject, XMLParserDelegate {
     }
     
     // MARK: 结束某个元素的解析
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+    public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         currentElement = nil
     }
     
     // MARK: 解析完成
-    func parserDidEndDocument(_ parser: XMLParser) { }
+    public func parserDidEndDocument(_ parser: XMLParser) { }
     
     // MARK: 解析失败
-    func parser(_ parser: XMLParser, parseErrorOccurred parseError: any Error) {
+    public func parser(_ parser: XMLParser, parseErrorOccurred parseError: any Error) {
         update = nil
     }
 }

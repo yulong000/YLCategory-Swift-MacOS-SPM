@@ -6,9 +6,6 @@
 //
 
 import AppKit
-#if canImport(Sparkle)
-import Sparkle
-#endif
 
 public class YLUpdateManager: NSObject {
     
@@ -124,17 +121,7 @@ public class YLUpdateManager: NSObject {
     /// app介绍
     private(set) var appIntroduceUrl: String?
     /// 解析xml的 delegate
-    private var xmlDelegate = YLUpdateXMLParserDelegate()
-    
-#if canImport(Sparkle)
-    /// 线下版检测更新控制器
-    private lazy var sparkleUpdateController: SPUStandardUpdaterController = {
-        let controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: self, userDriverDelegate: self)
-        controller.updater.automaticallyChecksForUpdates = true
-        return controller
-    }()
-    
-#endif
+    public let xmlDelegate = YLUpdateXMLParserDelegate()
     
     // MARK: - 国际化
     
@@ -299,7 +286,7 @@ extension YLUpdateManager {
     }
     
     // MARK: 显示日期过期的alert弹窗
-    private func showDateExpiredAlert(downloadUrl: String) {
+    public func showDateExpiredAlert(downloadUrl: String) {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.alertStyle = .warning
@@ -316,7 +303,7 @@ extension YLUpdateManager {
     }
     
     // MARK: 显示系统版本过期的alert弹窗
-    private func showOSVersionExpiredAlert(downloadUrl: String) {
+    public func showOSVersionExpiredAlert(downloadUrl: String) {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.alertStyle = .warning
@@ -333,7 +320,7 @@ extension YLUpdateManager {
     }
     
     // MARK: 字符串转日期
-    private func dateWith(_ dateStr: String) -> Date? {
+    public func dateWith(_ dateStr: String) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
@@ -341,40 +328,3 @@ extension YLUpdateManager {
         return formatter.date(from: dateStr)
     }
 }
-
-#if canImport(Sparkle)
-
-extension YLUpdateManager: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
-    
-    /// - Parameter background: 是否后台检测, background = true时，无新版本，则不弹窗提醒
-    public func checkSparkleUpdates(background: Bool = true) {
-        if background {
-            sparkleUpdateController.updater.checkForUpdatesInBackground()
-        } else {
-            sparkleUpdateController.updater.checkForUpdates()
-        }
-    }
-    
-    public func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
-        print("Sparkle 获取xml文件成功: \(appcast.items.first?.propertiesDictionary ?? [:])")
-    }
-    
-    public func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
-        print("Sparkle 暂无更新");
-    }
-    
-    public func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
-        print("Sparkle 有可用升级:\nVersion: \(item.displayVersionString)\nBuild number: \(item.versionString)\nUrl:\(item.fileURL?.absoluteString ?? "")\nNote: \(item.itemDescriptionFormat ?? "")")
-    }
-    
-    public func updater(_ updater: SPUUpdater, userDidMake choice: SPUUserUpdateChoice, forUpdate updateItem: SUAppcastItem, state: SPUUserUpdateState) {
-        switch (choice) {
-        case .skip:     print("Sparkle 用户点击 跳过这个版本");
-        case .install:  print("Sparkle 用户点击 安装更新");
-        case .dismiss:  print("Sparkle 用户点击 稍后提醒");
-        default: break;
-        }
-    }
-}
-
-#endif
