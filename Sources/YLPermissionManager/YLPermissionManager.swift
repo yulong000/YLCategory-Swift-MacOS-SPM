@@ -352,9 +352,7 @@ public class YLPermissionManager: NSObject {
                                  Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
     
     static func bundleImage(_ name: String) -> NSImage {
-        if let url = Bundle.module.url(forResource: "YLPermissionManager", withExtension: "bundle"),
-           let bundle = Bundle(url: url),
-           let imageUrl = bundle.url(forResource: name, withExtension: ""),
+        if let imageUrl = Bundle.module.url(forResource: name, withExtension: ""),
            let image = NSImage(contentsOf: imageUrl) {
             return image
         }

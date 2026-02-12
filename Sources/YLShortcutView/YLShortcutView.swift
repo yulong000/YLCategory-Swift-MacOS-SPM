@@ -297,10 +297,8 @@ open class YLShortcutView: NSView {
     
     // MARK: - 获取图片
     
-    static func bundleImage(_ name: String) -> NSImage {
-        if let url = Bundle.module.url(forResource: "YLShortcutManager", withExtension: "bundle"),
-           let bundle = Bundle(url: url),
-           let imageUrl = bundle.url(forResource: name, withExtension: ""),
+    private static func bundleImage(_ name: String) -> NSImage {
+        if let imageUrl = Bundle.module.url(forResource: name, withExtension: ""),
            let image = NSImage(contentsOf: imageUrl) {
             return image
         }

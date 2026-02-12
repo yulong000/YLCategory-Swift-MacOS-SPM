@@ -427,9 +427,7 @@ public class YLHud: YLHudWindow {
     
     // MARK: 获取 Bundle 里面的图片
     private static func bundleImage(_ name: String) -> NSImage {
-        if let url = Bundle.module.url(forResource: "YLHud", withExtension: "bundle"),
-           let bundle = Bundle(url: url),
-           let imageUrl = bundle.url(forResource: name, withExtension: ""),
+        if let imageUrl = Bundle.module.url(forResource: name, withExtension: ""),
            let image = NSImage(contentsOf: imageUrl) {
             return image
         }
