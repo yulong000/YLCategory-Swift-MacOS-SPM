@@ -150,6 +150,22 @@ public extension Dictionary where Key == String, Value == Any {
     }
 }
 
+public extension String {
+    
+    /// 将json字符串转换成 [String: Any]
+    /// - Returns: 返回转换后的dict
+    func toJsonDict() throws -> [String: Any] {
+        guard let data = self.data(using: .utf8) else {
+            throw NSError(domain: "Json Error", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid UTF-8 string"])
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            throw NSError(domain: "JSONError", code: -3, userInfo: [NSLocalizedDescriptionKey: "JSON is not a dictionary"])
+        }
+        return json
+    }
+    
+}
+
 public extension Array where Element == [String: Any] {
     
     /// 1: 1转换成模型数组
