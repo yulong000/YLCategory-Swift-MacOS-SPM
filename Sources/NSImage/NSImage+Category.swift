@@ -16,7 +16,7 @@ public extension NSImage {
         img.lockFocus()
         color.setFill()
         let rect = NSRect(origin: .zero, size: size)
-        rect.fill(using: .sourceAtop)
+        rect.fill(using: .sourceIn)
         img.unlockFocus()
         return img
     }
