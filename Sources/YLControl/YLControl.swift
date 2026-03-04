@@ -11,41 +11,22 @@ import AppKit
 open class YLControl: NSControl {
     
     // 自定义NSControl时，为了响应点击事件，需要实现下面的方法
-    
-    private var isTrackingClick = false
 
     open override func mouseDown(with event: NSEvent) {
-        guard isEnabled else {
-            super.mouseDown(with: event)
-            return
-        }
-        let p = convert(event.locationInWindow, from: nil)
-        isTrackingClick = bounds.contains(p)
-        if isTrackingClick {
+        if isEnabled, bounds.contains(convert(event.locationInWindow, from: nil)) {
             window?.makeFirstResponder(self)
         }
         super.mouseDown(with: event)
     }
 
-    open override func mouseDragged(with event: NSEvent) {
-        guard isTrackingClick else {
-            super.mouseDragged(with: event)
-            return
-        }
-        let p = convert(event.locationInWindow, from: nil)
-        isTrackingClick = bounds.contains(p)
-        super.mouseDragged(with: event)
-    }
-
     open override func mouseUp(with event: NSEvent) {
-        defer {
-            isTrackingClick = false
-            super.mouseUp(with: event)
+        if isEnabled, let action = action {
+            let p = convert(event.locationInWindow, from: nil)
+            if bounds.contains(p) {
+                NSApp.sendAction(action, to: target, from: self)
+            }
         }
-        guard isEnabled, isTrackingClick, let action = action else { return }
-        let p = convert(event.locationInWindow, from: nil)
-        guard bounds.contains(p) else { return }
-        NSApp.sendAction(action, to: target, from: self)
+        super.mouseUp(with: event)
     }
     
     open override var acceptsFirstResponder: Bool { true }
