@@ -146,6 +146,9 @@ public extension String {
     /// 解析符号链接为真实路径
     var resolvingSymlinksInPath: String { (self as NSString).resolvingSymlinksInPath }
     
+    /// 标准化路径
+    var standardizingPath: String { (self as NSString).standardizingPath }
+    
     /// init(fileURLWithPath path: String)
     var fileUrl: URL { URL(fileURLWithPath: self) }
     

@@ -11,6 +11,9 @@ import AppKit
 import UniformTypeIdentifiers
 #endif
 
+
+public let fm = FileManager.default
+
 /// url是否是文件夹
 public func IsDirectory(_ url: URL) -> Bool {
     return IsDirectory(url.path)

@@ -51,13 +51,11 @@ public class YLCFNotificationCenter {
     ///   - userInfo: 发送到信息
     ///   - observer: 回调接收对象，传nil则不会回调
     ///   - handler: 对方收到通知后的回调
-    public func postCFNotification(_ name: Notification.Name, userInfo: [String : Any]? = nil, observer: AnyObject, handler: ([String : Any]) -> Void) {
+    public func postCFNotification(_ name: Notification.Name, userInfo: [String : Any]? = nil, observer: AnyObject, handler: @escaping ([String : Any]?) -> Void) {
         let info = (isSandbox ? nil : userInfo) as CFDictionary?
         let notificationName = CFNotificationName(name.rawValue as CFString)
         CFNotificationCenterPostNotificationWithOptions(CFNotificationCenterGetDistributedCenter(), notificationName, nil, info, kCFNotificationDeliverImmediately | kCFNotificationPostToAllSessions)
-        _addObserver(observer, name: Notification.Name(name.rawValue + YLCFNotificationCallbackNameSuffix), response:  { info, callback in
-            callback(info)
-        })
+        _addObserver(observer, name: Notification.Name(name.rawValue + YLCFNotificationCallbackNameSuffix), handler: handler)
     }
     
     // MARK: - 移除
