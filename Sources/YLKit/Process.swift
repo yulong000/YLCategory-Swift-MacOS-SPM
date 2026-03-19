@@ -71,45 +71,7 @@ public func OpenFilePath(_ path: String) -> Bool {
 /// - Returns: 返回结果
 @discardableResult
 public func ExecuteCMD(_ cmd: String, argus: [String]? = nil, logEnable: Bool = true) -> String? {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/bin/bash")
-    process.arguments = ["-c", cmd] + (argus ?? [])
-    
-    let outputPipe = Pipe()
-    let errorPipe = Pipe()
-    process.standardOutput = outputPipe
-    process.standardError = errorPipe
-    do {
-        try process.run()
-    } catch {
-        if logEnable {
-            YLLog("❌ cmd '/bin/bash -c \(cmd)' 发生错误: \(error)")
-        }
-        return nil
-    }
-    process.waitUntilExit()
-    
-    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-    
-    let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    let errorOutput = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    
-    if process.terminationStatus != 0 {
-        if logEnable {
-            YLLog("❌ cmd '/bin/bash -c \(cmd)' 执行失败: \(errorOutput)")
-        }
-        return nil
-    }
-    let result = output.count > 0 ? output : errorOutput
-    if logEnable {
-        if errorOutput.isEmpty {
-            YLLog("✅ cmd '/bin/bash -c \(cmd)' 执行成功:\n\(result)")
-        } else {
-            YLLog("⚠️ cmd '/bin/bash -c \(cmd)' 执行成功:\n\(result)")
-        }
-    }
-    return result
+    return ExecuteCustomCMD("/bin/bash", argus: ["-c", cmd] + (argus ?? []), logEnable: logEnable)
 }
 
 
@@ -124,39 +86,71 @@ public func ExecuteCustomCMD(_ url: String, argus: [String], logEnable: Bool = t
     let process = Process()
     process.executableURL = URL(fileURLWithPath: url)
     process.arguments = argus
-    
+
     let outputPipe = Pipe()
     let errorPipe = Pipe()
     process.standardOutput = outputPipe
     process.standardError = errorPipe
+
+    let outputHandle = outputPipe.fileHandleForReading
+    let errorHandle = errorPipe.fileHandleForReading
+
+    let outputData = NSMutableData()
+    let errorData = NSMutableData()
+    let group = DispatchGroup()
+
+    group.enter()
+    outputHandle.readabilityHandler = { handle in
+        let data = handle.availableData
+        if data.isEmpty {
+            handle.readabilityHandler = nil
+            group.leave()
+            return
+        }
+        outputData.append(data)
+    }
+
+    group.enter()
+    errorHandle.readabilityHandler = { handle in
+        let data = handle.availableData
+        if data.isEmpty {
+            handle.readabilityHandler = nil
+            group.leave()
+            return
+        }
+        errorData.append(data)
+    }
+
     do {
         try process.run()
     } catch {
+        outputHandle.readabilityHandler = nil
+        errorHandle.readabilityHandler = nil
         if logEnable {
-            YLLog("❌ custom cmd '\(([url] + argus).joined(separator: " "))' 发生错误: \(error)")
+            YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 发生错误: \(error)")
         }
         return nil
     }
+
     process.waitUntilExit()
-    
-    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-    
-    let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    let errorOutput = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    
+    group.wait()
+
+    let output = String(data: outputData as Data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let errorOutput = String(data: errorData as Data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
     if process.terminationStatus != 0 {
         if logEnable {
-            YLLog("❌ custom cmd '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)")
+            YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)")
         }
         return nil
     }
-    let result = output.count > 0 ? output : errorOutput
+
+    let result = output.isEmpty ? errorOutput : output
     if logEnable {
         if errorOutput.isEmpty {
-            YLLog("✅ custom cmd '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
+            YLLog("✅ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
         } else {
-            YLLog("⚠️ custom cmd '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
+            YLLog("⚠️ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
         }
     }
     return result
