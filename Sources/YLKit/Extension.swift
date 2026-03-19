@@ -195,3 +195,49 @@ public protocol JsonInitializable {
 public protocol JsonInitializableNullable {
     init?(strictJson: [String: Any])
 }
+
+public extension BinaryInteger {
+    
+    /// 转成文件大小
+    func fileSizeString(units: ByteCountFormatter.Units = [.useAll]) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        formatter.allowedUnits = units
+        return formatter.string(fromByteCount: Int64(clamping: self))
+    }
+    
+    /// 转成MEM大小
+    func memorySizeString(units: ByteCountFormatter.Units = [.useAll]) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .memory
+        formatter.allowedUnits = units
+        return formatter.string(fromByteCount: Int64(clamping: self))
+    }
+    
+    /// 转成磁盘大小
+    func diskSizeString(units: ByteCountFormatter.Units = [.useAll]) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .decimal
+        formatter.allowedUnits = units
+        return formatter.string(fromByteCount: Int64(clamping: self))
+    }
+    
+    /// 转成网速大小
+    /// - Parameters:
+    ///   - units: 显示的单位
+    ///   - hideSpace: 是否隐藏中间的空格  `1 MB/s` or `1MB/s`
+    ///   - appendingUint: 在后面拼接 `/s`或其他
+    /// - Returns: 返回格式化后的字符串
+    func networkSpeedString(units: ByteCountFormatter.Units = [.useAll], hideSpace: Bool = true, appendingUint: String? = "/s") -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .decimal
+        formatter.allowedUnits = units
+        formatter.isAdaptive = true
+        formatter.zeroPadsFractionDigits = false
+        var value = formatter.string(fromByteCount: Int64(clamping: self))
+        if hideSpace {
+            value = value.replacingOccurrences(of: " ", with: "")
+        }
+        return value + (appendingUint ?? "")
+    }
+}
