@@ -145,7 +145,9 @@ public func ExecuteCustomCMD(_ url: String, argus: [String], logEnable: Bool = t
     let errorOutput = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
     if process.terminationStatus != 0 {
-        if logEnable { YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)") }
+        if logEnable { YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)",
+                             "status: \(process.terminationStatus)",
+                             "reason: \(process.terminationReason)") }
         return nil
     }
 
