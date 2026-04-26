@@ -115,7 +115,7 @@ public extension NSView {
     }
     private var lastUpdateSize: CGSize {
         get { objc_getAssociatedObject(self, &NSViewLastUpdateSizeKey) as? CGSize ?? .zero }
-        set { objc_setAssociatedObject(self, &NSViewLastUpdateSizeKey, newValue, .OBJC_ASSOCIATION_ASSIGN) }
+        set { objc_setAssociatedObject(self, &NSViewLastUpdateSizeKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
     
