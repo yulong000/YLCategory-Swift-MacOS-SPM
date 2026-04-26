@@ -11,6 +11,7 @@ import ObjectiveC.runtime
 fileprivate var NSViewSmoothCornerMaskLayerKey: UInt8 = 0
 fileprivate var NSViewSmoothCornerBorderLayerKey: UInt8 = 0
 fileprivate var NSViewSmoothCornerMaskCornerKey: UInt8 = 0
+fileprivate var NSViewLastUpdateSizeKey: UInt8 = 0
 
 public extension NSView {
     
@@ -55,9 +56,21 @@ public extension NSView {
 
     /// 绘制平滑圆角及边框
     private func drawSmoothCornerAndBorder() {
+        
+        // 尺寸未发生变化，不变
+        if self.bounds.size == lastUpdateSize {
+            return
+        }
+        lastUpdateSize = self.bounds.size
+        
         guard let layer = self.layer,
               let maskLayer = self.smoothCornerMaskLayer,
               let maskCorner = self.smoothCornerMaskCorner else { return }
+        
+        // 禁用隐式动画，防止缩放时圆角变形或卡顿
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        
         // 圆角
         maskLayer.frame = layer.bounds
         let bezierPath = NSViewCornerBezierPath(rect: maskLayer.bounds, corner: maskCorner)
@@ -66,7 +79,11 @@ public extension NSView {
         } else {
             maskLayer.path = bezierPath.getCGPath()
         }
-        layer.mask = maskLayer
+        
+        // 避免重复赋值，可能引起的问题
+        if layer.mask !== maskLayer {
+            layer.mask = maskLayer
+        }
         
         // 边框
         if let borderLayer = smoothCornerBorderLayer {
@@ -77,6 +94,9 @@ public extension NSView {
                 layer.insertSublayer(borderLayer, at: 0)
             }
         }
+        
+        CATransaction.commit()
+        
     }
     
     // MARK: - 增加的属性
@@ -93,6 +113,11 @@ public extension NSView {
         get { objc_getAssociatedObject(self, &NSViewSmoothCornerBorderLayerKey) as? CAShapeLayer }
         set { objc_setAssociatedObject(self, &NSViewSmoothCornerBorderLayerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
+    private var lastUpdateSize: CGSize {
+        get { objc_getAssociatedObject(self, &NSViewLastUpdateSizeKey) as? CGSize ?? .zero }
+        set { objc_setAssociatedObject(self, &NSViewLastUpdateSizeKey, newValue, .OBJC_ASSOCIATION_ASSIGN) }
+    }
+    
     
     // MARK: - Method Swizzling
     
