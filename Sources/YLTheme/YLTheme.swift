@@ -13,11 +13,11 @@ import AppKit
     case light      // 亮色
     case dark       // 暗色
     
-    var title: String {
+    public func title() -> String {
         switch self {
-        case .auto:     YLTheme.localize("Auto")
-        case .light:    YLTheme.localize("Light")
-        case .dark:     YLTheme.localize("Dark")
+        case .auto:     return YLTheme.localize("Auto")
+        case .light:    return YLTheme.localize("Light")
+        case .dark:     return YLTheme.localize("Dark")
         }
     }
 }
@@ -27,9 +27,9 @@ public class YLTheme {
     /// 所有的主题
     public class var allThemeTitles: [String] {
         [
-            ThemeType.auto.title,
-            ThemeType.light.title,
-            ThemeType.dark.title
+            ThemeType.auto.title(),
+            ThemeType.light.title(),
+            ThemeType.dark.title()
         ]
     }
     
