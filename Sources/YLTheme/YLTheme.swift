@@ -52,5 +52,5 @@ public class YLTheme {
         }
     }
     
-    static func localize(_ key: String) -> String { NSLocalizedString(key, bundle: .module, comment: "") }
+    public static func localize(_ key: String) -> String { NSLocalizedString(key, bundle: .module, comment: "") }
 }
