@@ -28,6 +28,7 @@ open class YLTextField: NSTextField, NSTextFieldDelegate {
         super.init(frame: frameRect)
         self.cell = YLTextFieldCell()
         self.isEditable = true
+        self.delegate = self
     }
 
     required public init?(coder: NSCoder) {
@@ -74,7 +75,7 @@ open class YLTextField: NSTextField, NSTextFieldDelegate {
 
 }
 
-open class YLSecureTextField: NSSecureTextField {
+open class YLSecureTextField: NSSecureTextField, NSTextFieldDelegate {
     
     /// 是否支持换行
     open var lineFeed = false {
@@ -94,12 +95,14 @@ open class YLSecureTextField: NSSecureTextField {
         super.init(frame: frameRect)
         self.cell = YLSecureTextFieldCell()
         self.isEditable = true
+        self.delegate = self
     }
 
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
         self.cell = YLSecureTextFieldCell()
         self.isEditable = true
+        self.delegate = self
     }
     
     public override func becomeFirstResponder() -> Bool {
