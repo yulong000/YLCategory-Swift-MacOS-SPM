@@ -265,3 +265,29 @@ public func RunAppWithBundleID(_ bundleID: String, arguments: [String]? = nil, a
     }
 }
 
+
+/// 根据传入路径，打开app
+/// - Parameters:
+///   - filePath: app路径
+///   - handler: 执行后回调
+public func RunAppAtPath(_ filePath: String, completion handler: ((Bool) -> Void)? = nil) {
+    let url = URL(fileURLWithPath: filePath)
+    if #available(macOS 10.15, *) {
+        let config = NSWorkspace.OpenConfiguration()
+        NSWorkspace.shared.openApplication(at: url, configuration: config) { app, error in
+            if let _ = app, error == nil {
+                handler?(true)
+            } else {
+                handler?(false)
+            }
+        }
+    } else {
+        do {
+            try NSWorkspace.shared.launchApplication(at: url, options: .default, configuration: [:])
+            handler?(true)
+        } catch {
+            print("RunAppWithPath: \(filePath), error: \(error)")
+            handler?(false)
+        }
+    }
+}
