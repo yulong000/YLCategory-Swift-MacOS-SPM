@@ -161,15 +161,34 @@ public extension String {
     /// 拼接扩展名
     func appendingPathExtension(_ str: String) -> String? { (self as NSString).appendingPathExtension(str) }
     
-    /// 转成小写拼音（无声调）
-    var pinyin: String {
+    /// 获取拼音字符串
+    /// - Parameters:
+    ///   - firstChar: 是否只获取首字母
+    ///   - stripDiacritics: 是否去掉声调
+    ///   - removeSpaces: 是否去掉空格
+    ///   - lowercased: 是否小写
+    /// - Returns: 转换后的字符串
+    func pinyin(firstChar: Bool = false, stripDiacritics: Bool = true, removeSpaces: Bool = true, lowercased: Bool = true) -> String {
         let mutable = NSMutableString(string: self) as CFMutableString
+        // 转拼音
         CFStringTransform(mutable, nil, kCFStringTransformToLatin, false)
-        CFStringTransform(mutable, nil, kCFStringTransformStripDiacritics, false)
-        return (mutable as String).replacingOccurrences(of: " ", with: "").lowercased()
+        // 去掉声调
+        if stripDiacritics {
+            CFStringTransform(mutable, nil, kCFStringTransformStripDiacritics, false)
+        }
+        var result = mutable as String
+        if firstChar {
+            // 首字母
+            result = result.split(separator: " ").compactMap(\.first).map(String.init).joined()
+        } else if removeSpaces {
+            // 移除空格
+            result = result.replacingOccurrences(of: " ", with: "")
+        }
+        // 小写
+        if lowercased {
+            result = result.lowercased()
+        }
+        return result
     }
-    
-    /// 拼音首字母
-    var pinyinFirstChar: String { pinyin.split(separator: " ").map { String($0.first!) }.joined() }
     
 }

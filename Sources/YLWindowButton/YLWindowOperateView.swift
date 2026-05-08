@@ -86,7 +86,14 @@ open class YLWindowOperateView: NSView {
     @objc private func opreateButtonClicked(_ btn: YLWindowButton) {
         switch btn.buttonType {
         case .close:
-            window?.performClose(btn)
+            if let window = window, let sheet = window.sheetParent {
+                sheet.endSheet(window)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    window.close()
+                }
+            } else {
+                window?.performClose(btn)
+            }
         case .mini:
             window?.performMiniaturize(btn)
         case .fullScreen:
