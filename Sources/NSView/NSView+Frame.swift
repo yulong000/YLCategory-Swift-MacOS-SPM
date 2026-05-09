@@ -15,7 +15,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.origin.x = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.origin.x }
     }
@@ -25,7 +25,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.origin.y = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.origin.y }
     }
@@ -35,7 +35,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.size.width = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.size.width }
     }
@@ -45,7 +45,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.size.height = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.size.height }
     }
@@ -55,7 +55,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.size = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.size }
     }
@@ -65,7 +65,7 @@ public extension NSView {
         set {
             var frame = self.frame
             frame.origin = newValue
-            self.frame = frame
+            updateFrame(frame)
         }
         get { frame.origin }
     }
@@ -74,8 +74,8 @@ public extension NSView {
     var center: NSPoint {
         set {
             var frame = self.frame
-            frame.origin = NSMakePoint(newValue.x - self.frame.size.width / 2, newValue.y - self.frame.size.height / 2)
-            self.frame = frame
+            frame.origin = NSMakePoint(newValue.x - frame.width / 2, newValue.y - frame.height / 2)
+            updateFrame(frame)
         }
         get { NSMakePoint(frame.midX, frame.midY) }
     }
@@ -83,8 +83,9 @@ public extension NSView {
     /// 中心点 x 值
     var centerX: CGFloat {
         set {
-            let centerY = self.center.y;
-            self.center = NSMakePoint(newValue, centerY)
+            var frame = self.frame
+            frame.origin.x = newValue - frame.width / 2
+            updateFrame(frame)
         }
         get { frame.midX }
     }
@@ -92,8 +93,9 @@ public extension NSView {
     /// 中心点 y 值
     var centerY: CGFloat {
         set {
-            let centerX = self.center.x;
-            self.center = NSMakePoint(centerX, newValue)
+            var frame = self.frame
+            frame.origin.y = newValue - frame.height / 2
+            updateFrame(frame)
         }
         get { frame.midY }
     }
@@ -126,14 +128,24 @@ public extension NSView {
     var right: CGFloat {
         set {
             var frame = self.frame
-            frame.origin.x = newValue - self.width
-            self.frame = frame
+            frame.origin.x = newValue - frame.size.width
+            updateFrame(frame)
         }
         get { maxX }
     }
     
     /// 自己的中心点
     var centerPoint: NSPoint { NSMakePoint(width / 2, height / 2) }
+    
+    /// 更新frame
+    private func updateFrame(_ newFrame: NSRect) {
+        if  abs(frame.origin.x - newFrame.origin.x) > 0.1 ||
+            abs(frame.origin.y - newFrame.origin.y) > 0.1 ||
+            abs(frame.size.width - newFrame.size.width) > 0.1 ||
+            abs(frame.size.height - newFrame.size.height) > 0.1 {
+            self.frame = newFrame
+        }
+    }
     
     /// 设置x值
     @discardableResult
@@ -250,7 +262,19 @@ public extension NSView {
     /// 设置frame
     @discardableResult
     func frameIs(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> Self {
-        frame = NSMakeRect(x, y, w, h)
+        updateFrame(NSMakeRect(x, y, w, h))
+        return self
+    }
+    
+    /// 同时设置frame中的几个值，其他的保持不变
+    @discardableResult
+    func frameIs(x: CGFloat? = nil, y: CGFloat? = nil, w: CGFloat? = nil, h: CGFloat? = nil) -> Self {
+        var f = self.frame
+        if let x = x { f.origin.x = x }
+        if let y = y { f.origin.y = y }
+        if let w = w { f.size.width = w }
+        if let h = h { f.size.height = h }
+        updateFrame(f)
         return self
     }
     
@@ -559,7 +583,7 @@ public extension NSView {
         frame.size = NSMakeSize(superview.width - left - right, superview.height - top - bottom)
         frame.origin.x = left
         frame.origin.y = top
-        self.frame = frame
+        updateFrame(frame)
         return self
     }
 }
