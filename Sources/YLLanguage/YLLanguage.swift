@@ -42,12 +42,15 @@ public class YLLanguage {
     /// 当前语言类型
     public class var currentType: LanguageType {
         var type: LanguageType = .system
-        if let current = Bundle.main.preferredLocalizations.first {
-            for model in YLLanguage.allLanguages {
-                if model.code == current {
-                    type = model.languageType
-                    break
-                }
+        guard let languages = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String],
+              let first = languages.first,
+              !first.isEmpty else {
+            return .system
+        }
+        for model in YLLanguage.allLanguages {
+            if model.code == first {
+                type = model.languageType
+                break
             }
         }
         return type
