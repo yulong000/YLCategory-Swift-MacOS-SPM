@@ -19,6 +19,12 @@ import Cocoa
     case spanish                   // 西班牙语
     case portuguese                // 葡萄牙语
     case german                    // 德语
+    
+    /// 设置为当前app的语言（仅设置）
+    /// 如果需要重启app等其他操作，请使用YLLanguage的类方法
+    public func setup() {
+        YLLanguage.set(languageType: self, restart: false)
+    }
 }
 
 public class YLLanguage {
@@ -45,6 +51,9 @@ public class YLLanguage {
         guard let languages = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String],
               let first = languages.first,
               !first.isEmpty else {
+            // 如果是“”，就移除，恢复默认
+            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            UserDefaults.standard.synchronize()
             return .system
         }
         for model in YLLanguage.allLanguages {
