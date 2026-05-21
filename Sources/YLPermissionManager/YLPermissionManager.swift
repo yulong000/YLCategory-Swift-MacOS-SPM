@@ -248,11 +248,12 @@ public class YLPermissionManager: NSObject {
         // 获取当前屏幕上的窗口信息
         guard let windowList = CGWindowListCopyWindowInfo(.excludeDesktopElements, kCGNullWindowID) as? [[CFString: Any]] else { return false }
         for dict in windowList {
-            if let name = dict[kCGWindowName] as? String,
-               !name.isEmpty,
-               let pid = dict[kCGWindowOwnerPID] as? pid_t,
-               pid != currentPid,
-               let runningApp = NSRunningApplication(processIdentifier: pid),
+            // 能获取到名字
+            guard dict[kCGWindowName] != nil  else { continue }
+            // 排除当前app
+            guard let pid = dict[kCGWindowOwnerPID] as? pid_t, pid != currentPid else { continue }
+            // 排除dock
+            if let runningApp = NSRunningApplication(processIdentifier: pid),
                let execName = runningApp.executableURL?.lastPathComponent,
                execName != "Dock" {
                 return true
