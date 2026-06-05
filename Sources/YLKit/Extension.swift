@@ -32,6 +32,7 @@ public extension Dictionary where Key == String, Value == Any {
         if let v = self[key] as? Int { return String(v) }
         if let v = self[key] as? Double { return String(v) }
         if let v = self[key] as? Bool { return v ? "true" : "false" }
+        if let v = self[key] as? Data { return String(data: v, encoding: .utf8) }
         return nil
     }
     
@@ -108,6 +109,13 @@ public extension Dictionary where Key == String, Value == Any {
     /// - Returns: 返回值
     func array<T>(_ key: String, _: T.Type) -> [T] {
         return self[key] as? [T] ?? []
+    }
+    
+    /// 从[String:Any]中读取Date
+    /// - Parameter key: key值
+    /// - Returns: 返回值
+    func date(_ key: String) -> Date? {
+        return self[key] as? Date
     }
     
     /// 从[String:Any]中读取Array并 1: 1转换成模型数组
