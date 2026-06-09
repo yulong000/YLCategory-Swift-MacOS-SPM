@@ -102,13 +102,22 @@ public extension Dictionary where Key == String, Value == Any {
         return self[key] as? [String: Any]
     }
     
-    /// 从[String:Any]中读取Array
+    /// 从[String:Any]中读取Array，不存在则返回[]
     /// - Parameters:
     ///   - key: key值
-    ///   - T: 数组内的类型，必须是可通过 as? 从 JSON 数组中转换的类型
+    ///   - type: 数组内的类型，必须是可通过 as? 从 JSON 数组中转换的类型
     /// - Returns: 返回值
-    func array<T>(_ key: String, _: T.Type) -> [T] {
+    func array<T>(_ key: String, of type: T.Type) -> [T] {
         return self[key] as? [T] ?? []
+    }
+    
+    /// 从[String:Any]中读取Array, 不存在则返回nil
+    /// - Parameters:
+    ///   - key: key值
+    ///   - type: 数组内的类型，必须是可通过 as? 从 JSON 数组中转换的类型
+    /// - Returns: 返回值
+    func arrayOrNil<T>(_ key: String, of type: T.Type) -> [T]? {
+        return self[key] as? [T]
     }
     
     /// 从[String:Any]中读取Date
@@ -121,21 +130,21 @@ public extension Dictionary where Key == String, Value == Any {
     /// 从[String:Any]中读取Array并 1: 1转换成模型数组
     /// - Parameters:
     ///   - key: key值
-    ///   - _: 需要转换的模型
+    ///   - type: 需要转换的模型
     /// - Returns: 返回值
-    func models<T: JsonInitializable>(_ key: String, _: T.Type) -> [T] {
-        let arr = self.array(key, [String: Any].self)
-        return arr.models(T.self)
+    func models<T: JsonInitializable>(_ key: String, of type: T.Type) -> [T] {
+        let arr = self.array(key, of: [String: Any].self)
+        return arr.models(of: T.self)
     }
     
     /// 从[String:Any]中读取Array并转换成模型数组，会过滤掉无效的数据
     /// - Parameters:
     ///   - key: key值
-    ///   - _: 需要转换的模型
+    ///   - type: 需要转换的模型
     /// - Returns: 返回值
-    func strictModels<T: JsonInitializableNullable>(_ key: String, _: T.Type) -> [T] {
-        let arr = self.array(key, [String: Any].self)
-        return arr.strictModels(T.self)
+    func strictModels<T: JsonInitializableNullable>(_ key: String, of type: T.Type) -> [T] {
+        let arr = self.array(key, of: [String: Any].self)
+        return arr.strictModels(of: T.self)
     }
     
     
@@ -181,7 +190,7 @@ public extension Array where Element == [String: Any] {
     ///   - key: key值
     ///   - T: 需要转换的模型
     /// - Returns: 返回值
-    func models<T: JsonInitializable>(_: T.Type) -> [T] {
+    func models<T: JsonInitializable>(of type: T.Type) -> [T] {
         return map { T(json: $0) }
     }
     
@@ -189,7 +198,7 @@ public extension Array where Element == [String: Any] {
     /// - Parameters:
     ///   - T: 需要转换的模型
     /// - Returns: 返回值
-    func strictModels<T: JsonInitializableNullable>(_: T.Type) -> [T] {
+    func strictModels<T: JsonInitializableNullable>(of type: T.Type) -> [T] {
         return compactMap { T(strictJson: $0) }
     }
 }
