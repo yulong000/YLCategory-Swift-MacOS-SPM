@@ -23,11 +23,11 @@ public func ConvertToBottomLeftCoordinateSystem(_ topLeftCoordinateSystemPoint: 
 /// 将屏幕坐标系上的rect(左上角为(0,0), 向下为正）,转换为视图坐标系上的点（左下角为(0,0), 向上为正）
 public func ConvertToBottomLeftCoordinateSystem(_ topLeftCoordinateSystemRect: NSRect) -> NSRect {
     // 用主屏做参考（WindowServer 也是以主屏为基准）
-    guard let mainScreen = NSScreen.main else {
+    guard let primaryScreen = NSScreen.screens.first(where: { $0.frame.origin == .zero }) else {
         return topLeftCoordinateSystemRect
     }
     
-    let flippedY = mainScreen.frame.maxY - topLeftCoordinateSystemRect.origin.y - topLeftCoordinateSystemRect.size.height
+    let flippedY = primaryScreen.frame.maxY - topLeftCoordinateSystemRect.origin.y - topLeftCoordinateSystemRect.size.height
     return NSRect(
         x: topLeftCoordinateSystemRect.origin.x,
         y: flippedY,
