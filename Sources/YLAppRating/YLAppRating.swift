@@ -22,11 +22,11 @@ public class YLAppRating {
     ///   - daysSinceFirstLaunch: 从第一次启动，到执行弹窗，最少间隔的天数，防止一上来就弹窗，需与minExecCount同时满足
     ///   - daysSinceLastPrompt: 从上次一执行弹窗代码，到下一次执行弹窗代码，中间最少间隔的天数，需与minExecCount同时满足
     ///   - delayInSeconds: 执行弹窗代码的延时操作，防止一打开app就弹窗
-    public class func showWith(appID: String,
-                               minExecCount: Int = 10,
-                               daysSinceFirstLaunch: Int = 3,
-                               daysSinceLastPrompt: Int = 365,
-                               delayInSeconds: TimeInterval = 10) {
+    public class func showIfNeeded(appID: String,
+                                   minExecCount: Int = 10,
+                                   daysSinceFirstLaunch: Int = 3,
+                                   daysSinceLastPrompt: Int = 365,
+                                   delayInSeconds: TimeInterval = 10) {
         // 检查是否从 App Store 下载
         guard let receiptURL = Bundle.main.appStoreReceiptURL,
               FileManager.default.fileExists(atPath: receiptURL.path) else {
@@ -96,6 +96,21 @@ public class YLAppRating {
 #if DEBUG
             print("App评分 - 执行了弹窗评分")
 #endif
+        }
+    }
+    
+    /// 立即显示评分弹窗
+    /// - Parameter appID: app ID
+    public class func showImmediately(appID: String) {
+        if #available(macOS 15.0, *) {
+            // macOS 15 及以上支持输入中文
+            SKStoreReviewController.requestReview()
+        } else {
+            // 跳转到 App Store 的评分页面
+            let appStoreReviewPath = "itms-apps://itunes.apple.com/app/id\(appID)?action=write-review"
+            if let url = URL(string: appStoreReviewPath) {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 }
