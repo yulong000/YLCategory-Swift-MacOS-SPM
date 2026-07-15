@@ -9,10 +9,11 @@ import Foundation
 import AppKit
 
 public extension NSWindow {
-    static func clearBackground() -> NSWindow {
+    static func clearBackground(contentRect: NSRect = .zero,
+                                styleMask: StyleMask = [.titled, .fullSizeContentView, .miniaturizable, .closable]) -> NSWindow {
         let window = NSWindow(
-            contentRect: .zero,
-            styleMask: [.titled, .fullSizeContentView, .miniaturizable, .closable],
+            contentRect: contentRect,
+            styleMask: styleMask,
             backing: .buffered,
             defer: true
         )

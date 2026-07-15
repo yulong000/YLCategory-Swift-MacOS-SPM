@@ -7,7 +7,6 @@
 
 
 import AppKit
-import SystemConfiguration
 
 /// app是暗黑模式
 public var AppIsDarkTheme: Bool { NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua }
@@ -86,45 +85,6 @@ public let App_Name: String = {
 }()
 /// 当前app的bundle ID
 public let Bundle_Id: String = Bundle.main.bundleIdentifier ?? ""
-/// 当前系统版本号
-public let System_OS_Version = {
-    let version = ProcessInfo.processInfo.operatingSystemVersion
-    return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
-}()
-/// 当前登录的用户名, 未登录用户时，返回nil
-public var GUIUserName: String? {
-    guard let userName = SCDynamicStoreCopyConsoleUser(nil, nil, nil) as? String,
-          userName != "loginWindow" else {
-        return nil
-    }
-    return userName
-}
-/// 当前登录的用户名(例如/Users/xxx/中的xxx，有可能跟 GUIUserName 不一样), 未登录用户时，返回nil
-public var GUIUserDisplayName: String? {
-    var uid: uid_t = 0
-    guard let userName = SCDynamicStoreCopyConsoleUser(nil, &uid, nil) as? String,
-          userName != "loginWindow" else {
-        return nil
-    }
-    guard let pwd = getpwuid(uid),
-          let home = pwd.pointee.pw_dir else {
-        return nil
-    }
-    return String(cString: home).components(separatedBy: "/").last
-}
-/// 当前用户的名字 （/Users/xxx中的xxx）
-public var UserName: String { GUIUserDisplayName ?? NSUserName() }
-/// 当前用户的目录 （/Users/xxx）
-public var UserHome: String {
-    var uid: uid_t = 0
-    guard let userName = SCDynamicStoreCopyConsoleUser(nil, &uid, nil) as? String,
-          userName != "loginWindow",
-          let pwd = getpwuid(uid),
-          let home = pwd.pointee.pw_dir else {
-        return "/Users/\(NSUserName())"
-    }
-    return String(cString: home)
-}
 /// app的owner account ID, 从app store下载的一般是0，其他方式安装的是501，也有可能是其他值
 public let OwnerAccountID: Int? = {
     guard let path = Bundle.main.executablePath,

@@ -62,13 +62,13 @@ public func YLLog(_ items: Any..., style: __YLLogStyle = .default, file: NSStrin
     if #available(macOS 26.0, *) {
         let log = OSLog(subsystem: Bundle.main.bundleIdentifier ?? App_Name, category: "YLLog")
         if YL_LOG_MORE {
-            os_log("%{public}@\n[ %{public}@ 第%{public}d行 ] in %{public}@", log: log, type: .default, message, function, line, file.lastPathComponent)
+            os_log("%{public}@\n👉 [ %{public}@ 第%{public}d行 ] in %{public}@", log: log, type: .default, message, function, line, file.lastPathComponent)
         } else {
             os_log("%{public}@", log: log, type: .default, message)
         }
     } else {
         if YL_LOG_MORE {
-            NSLog("%@\n[ %@ 第%d行 ] in %@", message, function, line, file.lastPathComponent)
+            NSLog("%@\n👉 [ %@ 第%d行 ] in %@", message, function, line, file.lastPathComponent)
         } else {
             NSLog("%@", message)
         }
