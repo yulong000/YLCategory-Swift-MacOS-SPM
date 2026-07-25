@@ -49,6 +49,7 @@ public extension Dictionary where Key == String, Value == Any {
     /// - Returns: 返回值
     func int(_ key: String, default value: Int = 0) -> Int {
         if let v = self[key] as? Int { return v }
+        if let v = self[key] as? NSNumber { return v.intValue }
         if let v = self[key] as? String { return Int(v) ?? value }
         if let v = self[key] as? Double { return Int(v) }
         if let v = self[key] as? Bool { return v ? 1 : 0 }
@@ -62,6 +63,7 @@ public extension Dictionary where Key == String, Value == Any {
     /// - Returns: 返回值
     func int8(_ key: String, default value: Int8 = 0) -> Int8 {
         if let v = self[key] as? Int8 { return v }
+        if let v = self[key] as? NSNumber { return v.int8Value }
         if let v = self[key] as? String { return Int8(v) ?? value }
         if let v = self[key] as? Double { return Int8(v) }
         if let v = self[key] as? Bool { return v ? 1 : 0 }
@@ -75,8 +77,37 @@ public extension Dictionary where Key == String, Value == Any {
     /// - Returns: 返回值
     func uint8(_ key: String, default value: UInt8 = 0) -> UInt8 {
         if let v = self[key] as? UInt8 { return v }
+        if let v = self[key] as? NSNumber { return v.uint8Value }
         if let v = self[key] as? String { return UInt8(v) ?? value }
         if let v = self[key] as? Double { return UInt8(v) }
+        if let v = self[key] as? Bool { return v ? 1 : 0 }
+        return value
+    }
+    
+    /// 从[String:Any]中读取Int64值
+    /// - Parameters:
+    ///   - key: key值
+    ///   - value: 解析失败返回的值
+    /// - Returns: 返回值
+    func int64(_ key: String, default value: Int64 = 0) -> Int64 {
+        if let v = self[key] as? Int64 { return v }
+        if let v = self[key] as? NSNumber { return v.int64Value }
+        if let v = self[key] as? String { return Int64(v) ?? value }
+        if let v = self[key] as? Double { return Int64(v) }
+        if let v = self[key] as? Bool { return v ? 1 : 0 }
+        return value
+    }
+    
+    /// 从[String:Any]中读取uint64值
+    /// - Parameters:
+    ///   - key: key值
+    ///   - value: 解析失败返回的值
+    /// - Returns: 返回值
+    func uint64(_ key: String, default value: UInt64 = 0) -> UInt64 {
+        if let v = self[key] as? UInt64 { return v }
+        if let v = self[key] as? NSNumber { return v.uint64Value }
+        if let v = self[key] as? String { return UInt64(v) ?? value }
+        if let v = self[key] as? Double { return UInt64(v) }
         if let v = self[key] as? Bool { return v ? 1 : 0 }
         return value
     }
@@ -88,6 +119,7 @@ public extension Dictionary where Key == String, Value == Any {
     /// - Returns: 返回值
     func double(_ key: String, default value: Double = 0) -> Double {
         if let v = self[key] as? Double { return v }
+        if let v = self[key] as? NSNumber { return v.doubleValue }
         if let v = self[key] as? Int { return Double(v) }
         if let v = self[key] as? String { return Double(v) ?? value }
         return value
@@ -232,11 +264,22 @@ public extension BinaryInteger {
     }
     
     /// 转成磁盘大小
-    func diskSizeString(units: ByteCountFormatter.Units = [.useAll]) -> String {
+    /// - Parameters:
+    ///   - units: 显示的单位
+    ///   - hideSpace: 是否隐藏中间的空格  `1 MB` or `1MB`
+    ///   - appendingUint: 在后面拼接 `/s`或其他
+    /// - Returns: 返回格式化后的字符串
+    func diskSizeString(units: ByteCountFormatter.Units = [.useAll], hideSpace: Bool = true, appendingUint: String? = nil) -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .decimal
         formatter.allowedUnits = units
-        return formatter.string(fromByteCount: Int64(clamping: self))
+        formatter.isAdaptive = true // 自适应单位
+        formatter.zeroPadsFractionDigits = false // 控制小数部分末尾要不要补0
+        var value = formatter.string(fromByteCount: Int64(clamping: self))
+        if hideSpace {
+            value = value.replacingOccurrences(of: " ", with: "")
+        }
+        return value + (appendingUint ?? "")
     }
     
     /// 转成网速大小
@@ -247,7 +290,7 @@ public extension BinaryInteger {
     /// - Returns: 返回格式化后的字符串
     func networkSpeedString(units: ByteCountFormatter.Units = [.useAll], hideSpace: Bool = true, appendingUint: String? = "/s") -> String {
         let formatter = ByteCountFormatter()
-        formatter.countStyle = .decimal
+        formatter.countStyle = .file
         formatter.allowedUnits = units
         formatter.isAdaptive = true
         formatter.zeroPadsFractionDigits = false
