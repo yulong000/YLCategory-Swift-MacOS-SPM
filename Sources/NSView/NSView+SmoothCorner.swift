@@ -167,19 +167,19 @@ public extension NSView {
 
 public struct NSViewMaskCorner {
     
-    var topLeft: CGFloat
-    var topRight: CGFloat
-    var bottomRight: CGFloat
-    var bottomLeft: CGFloat
+    public var topLeft: CGFloat
+    public var topRight: CGFloat
+    public var bottomRight: CGFloat
+    public var bottomLeft: CGFloat
     
-    init(_ value: CGFloat) {
+    public init(_ value: CGFloat) {
         topLeft = value
         topRight = value
         bottomLeft = value
         bottomRight = value
     }
     
-    init(topLeft: CGFloat = 0,
+    public init(topLeft: CGFloat = 0,
                 topRight: CGFloat = 0,
                 bottomRight: CGFloat = 0,
                 bottomLeft: CGFloat = 0) {
@@ -197,7 +197,7 @@ open class NSViewCornerBezierPath: NSBezierPath {
     // 系数
     private let coeff: CGFloat = 1.28195
     
-    convenience init(rect: NSRect, corner: NSViewMaskCorner) {
+    public convenience init(rect: NSRect, corner: NSViewMaskCorner) {
         self.init()
         
         var last = NSPoint(x: rect.width, y: rect.origin.y)
@@ -296,7 +296,7 @@ open class NSViewCornerBezierPath: NSBezierPath {
         close()
     }
     
-    func getCGPath() -> CGPath {
+    open func getCGPath() -> CGPath {
         let path = CGMutablePath()
         var points = [NSPoint](repeating: .zero, count: 3)
         for i in 0 ..< elementCount {
