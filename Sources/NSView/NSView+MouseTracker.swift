@@ -16,7 +16,7 @@ public enum YLMouseTrackingPhase {
 }
 
 /// 鼠标跟踪事件回调
-public typealias YLMouseTrackingHandler = (_ view: NSView, _ phase: YLMouseTrackingPhase, _ event: NSEvent) -> Void
+public typealias YLMouseTrackingHandler = (_ sender: NSView, _ phase: YLMouseTrackingPhase, _ event: NSEvent) -> Void
 
 nonisolated(unsafe) private var YLMouseTrackerKey: UInt8 = 0
 

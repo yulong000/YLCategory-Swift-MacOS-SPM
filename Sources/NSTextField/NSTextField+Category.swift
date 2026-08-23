@@ -18,8 +18,8 @@ public extension NSTextField {
     
     /// 固定最大宽度，高度自适应
     @discardableResult
-    func sizeToFit(maxWidth: CGFloat) -> Self {
-        let size = sizeThatFits(NSMakeSize(maxWidth, CGFloat.greatestFiniteMagnitude))
+    func sizeToFit(maxWidth: CGFloat, maxHeight: CGFloat = .greatestFiniteMagnitude) -> Self {
+        let size = sizeThatFits(NSMakeSize(maxWidth, maxHeight))
         var frame = self.frame
         frame.size = size
         self.frame = frame

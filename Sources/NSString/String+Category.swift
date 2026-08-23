@@ -20,8 +20,8 @@ public extension String {
     ///   - maxWidth: 最大宽度， 超过自动换行
     ///   - font: 字体大小
     /// - Returns: 自适应以后的大小
-    func sizeWith(maxWidth: CGFloat, font: NSFont) -> NSSize {
-        self.boundingRect(with: NSMakeSize(maxWidth, CGFloat.greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : font], context: nil).size
+    func sizeWith(maxWidth: CGFloat, maxHeight: CGFloat = .greatestFiniteMagnitude, font: NSFont) -> NSSize {
+        self.boundingRect(with: NSMakeSize(maxWidth, maxHeight), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : font], context: nil).size
     }
     
     /// 去掉首部的字符集合
