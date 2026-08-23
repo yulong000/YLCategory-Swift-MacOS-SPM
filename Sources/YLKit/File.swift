@@ -207,3 +207,6 @@ public func ParentUrl(of urls: [URL]) -> URL {
     let urls = urls.map { $0.deletingLastPathComponent() }
     return TopUrl(of: urls)
 }
+
+/// 系统默认的文件夹的图标
+public var folderIcon: NSImage { NSWorkspace.shared.icon(forFileType: NSFileTypeForHFSTypeCode(OSType(kGenericFolderIcon))) }

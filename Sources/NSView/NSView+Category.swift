@@ -51,16 +51,18 @@ public extension NSView {
     // MARK: - 监听鼠标的划入｜划出
     
     @discardableResult
-    func addMouseTrackingArea(rect: NSRect, owner: AnyObject) -> NSTrackingArea {
-        let trackingArea = NSTrackingArea(rect: rect, options: [.activeAlways, .mouseEnteredAndExited], owner: owner)
+    func addMouseTrackingArea(rect: NSRect,
+                              options: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .inVisibleRect],
+                              owner: AnyObject) -> NSTrackingArea {
+        let trackingArea = NSTrackingArea(rect: rect, options: options, owner: owner)
         addTrackingArea(trackingArea)
         return trackingArea
     }
     
     // MARK: 监听鼠标的划入｜划出整个区域
     @discardableResult
-    func addMouseTracking() -> NSTrackingArea {
-        return addMouseTrackingArea(rect: bounds, owner: self)
+    func addMouseTracking(options: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .inVisibleRect]) -> NSTrackingArea {
+        return addMouseTrackingArea(rect: bounds, options: options, owner: self)
     }
     
     // MARK: 移除所有的跟踪区域
@@ -88,26 +90,29 @@ public extension NSView {
     }
     
     // MARK: 设置圆角
-    func setCornerRadius(_ cornerRadius: CGFloat) {
+    func setCornerRadius(_ cornerRadius: CGFloat, isSmoothCorner: Bool = true) {
         clipsToBounds = true
         wantsLayer = true
-        layer?.masksToBounds = true
+        layer?.masksToBounds = cornerRadius > 0
         layer?.cornerRadius = cornerRadius
+        layer?.allowsEdgeAntialiasing = true // 抗锯齿
+        if #available(macOS 10.15, *) {
+            if isSmoothCorner {
+                layer?.cornerCurve = .continuous // 平滑圆角
+            }
+        }
     }
     
     // MARK: 设置边框和圆角
-    func setBorder(color: NSColor, width: CGFloat, cornerRadius: CGFloat) {
+    func setBorder(color: NSColor, width: CGFloat, cornerRadius: CGFloat, isSmoothCorner: Bool = true) {
         setBorder(color: color, width: width)
-        setCornerRadius(cornerRadius)
+        setCornerRadius(cornerRadius, isSmoothCorner: isSmoothCorner)
     }
     
     // MARK: 设置指定位置的圆角
-    func setCornerRadius(_ cornerRadius: CGFloat, mask: CACornerMask) {
-        clipsToBounds = true
-        wantsLayer = true
-        layer?.masksToBounds = true
+    func setCornerRadius(_ cornerRadius: CGFloat, isSmoothCorner: Bool = true, mask: CACornerMask) {
+        setCornerRadius(cornerRadius, isSmoothCorner: isSmoothCorner)
         layer?.maskedCorners = mask
-        layer?.cornerRadius = cornerRadius
     }
     
     // MARK: - 截图
