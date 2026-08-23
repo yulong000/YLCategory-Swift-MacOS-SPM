@@ -21,7 +21,11 @@ public extension String {
     ///   - font: 字体大小
     /// - Returns: 自适应以后的大小
     func sizeWith(maxWidth: CGFloat, maxHeight: CGFloat = .greatestFiniteMagnitude, font: NSFont) -> NSSize {
-        self.boundingRect(with: NSMakeSize(maxWidth, maxHeight), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : font], context: nil).size
+        var size = self.boundingRect(with: NSMakeSize(maxWidth, .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font : font], context: nil).size
+        if size.height > maxHeight {
+            size.height = maxHeight
+        }
+        return size
     }
     
     /// 去掉首部的字符集合

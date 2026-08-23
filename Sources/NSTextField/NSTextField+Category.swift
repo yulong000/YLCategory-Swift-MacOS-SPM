@@ -19,10 +19,23 @@ public extension NSTextField {
     /// 固定最大宽度，高度自适应
     @discardableResult
     func sizeToFit(maxWidth: CGFloat, maxHeight: CGFloat = .greatestFiniteMagnitude) -> Self {
-        let size = sizeThatFits(NSMakeSize(maxWidth, maxHeight))
+        let fittingSize = sizeThatFits(NSMakeSize(maxWidth, .greatestFiniteMagnitude))
+        let targetSize = NSSize(width: min(ceil(fittingSize.width), maxWidth), height: min(ceil(fittingSize.height), maxHeight))
         var frame = self.frame
-        frame.size = size
+        frame.size = targetSize
         self.frame = frame
+        return self
+    }
+    
+    /// 设置多行文本，超过可见高度时在最后一行显示省略号
+    @discardableResult
+    func enableMultilineTruncation(maxNumberOfLines: Int = 0) -> Self {
+        usesSingleLineMode = false
+        maximumNumberOfLines = maxNumberOfLines
+        lineBreakMode = .byWordWrapping
+        cell?.wraps = true
+        cell?.isScrollable = false
+        cell?.truncatesLastVisibleLine = true
         return self
     }
     
