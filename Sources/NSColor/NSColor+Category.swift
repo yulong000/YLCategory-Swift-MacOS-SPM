@@ -77,6 +77,8 @@ public extension NSColor {
     
     // MARK: - 获取十六进制字符串
     var hexString: String {
+        guard let color = usingColorSpace(.sRGB) else { return "#000000" }
+        
         let r = Int(round(redComponent * 255))
         let g = Int(round(greenComponent * 255))
         let b = Int(round(blueComponent * 255))
@@ -90,6 +92,7 @@ public extension NSColor {
     
     // MARK: 转成16进制字符串 #FFFFFFAA
     var hexStringWithAlpha: String {
+        guard let color = usingColorSpace(.sRGB) else { return "#00000000" }
         let r = Int(round(redComponent * 255))
         let g = Int(round(greenComponent * 255))
         let b = Int(round(blueComponent * 255))
@@ -99,6 +102,7 @@ public extension NSColor {
     
     // MARK: 转成16进制字符串 #FFFFFF
     var hexStringWithoutAlpha: String {
+        guard let color = usingColorSpace(.sRGB) else { return "#000000" }
         let r = Int(round(redComponent * 255))
         let g = Int(round(greenComponent * 255))
         let b = Int(round(blueComponent * 255))
