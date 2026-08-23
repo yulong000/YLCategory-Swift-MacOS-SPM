@@ -69,7 +69,11 @@ public extension NSColor {
     }
     
     // MARK: - 返回带有透明度的颜色
-    func alpha(_ a: CGFloat) -> NSColor { self.withAlphaComponent(a) }
+    func alpha(_ a: CGFloat) -> NSColor {
+        let value = min(max(a, 0), 1)
+        let newAlpha = alphaComponent * value
+        return withAlphaComponent(newAlpha)
+    }
     
     // MARK: - 获取十六进制字符串
     var hexString: String {
