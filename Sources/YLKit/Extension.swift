@@ -504,4 +504,67 @@ public extension BinaryInteger {
         }
         return value + (appendingUint ?? "")
     }
+    
+    /// 转成格式化后的数字大小字符串（如 ：1.2万，12K）
+    /// - Parameter locale: 地区
+    /// - Returns: 格式化后的字符串
+    func countString(locale: Locale? = nil) -> String {
+        let currentLocal: Locale
+        if locale != nil {
+            currentLocal = locale!
+        } else {
+            let appLanguages = UserDefaults.standard.object(forKey: "AppleLanguages") as? [String] ?? Locale.preferredLanguages
+            let language = Bundle.preferredLocalizations(from: Bundle.main.localizations, forPreferences: appLanguages).first ?? Bundle.main.developmentLocalization ?? "en"
+            currentLocal = Locale(identifier: language)
+        }
+        
+        if #available(macOS 12.0, *) {
+            let style = IntegerFormatStyle<Self>(locale: currentLocal).notation(.compactName)
+            return formatted(style)
+        } else {
+            let value = Double("\(self)") ?? 0
+            let abs = abs(value)
+            let isChinese = currentLocal.languageCode?.contains("zh") ?? false
+            
+            let divisor: Double
+            let suffix: String
+            
+            if isChinese {
+                switch abs {
+                case 100_000_000...:
+                    divisor = 100_000_000
+                    suffix = "亿"
+                case 10_000...:
+                    divisor = 10_000
+                    suffix = "万"
+                default:
+                    divisor = 1
+                    suffix = ""
+                }
+            } else {
+                switch abs {
+                case 1_000_000_000...:
+                    divisor = 1_000_000_000
+                    suffix = "B"
+                case 1_000_000...:
+                    divisor = 1_000_000
+                    suffix = "M"
+                case 1_000...:
+                    divisor = 1_000
+                    suffix = "K"
+                default:
+                    divisor = 1
+                    suffix = ""
+                }
+            }
+            let formatter = NumberFormatter()
+            formatter.locale = locale
+            formatter.numberStyle = .decimal
+            formatter.minimumFractionDigits = 0
+            formatter.maximumFractionDigits = divisor == 1 ? 0 : 1
+            
+            let number = NSNumber(value: value / divisor)
+            return (formatter.string(from: number) ?? "\(self)") + suffix
+        }
+    }
 }
