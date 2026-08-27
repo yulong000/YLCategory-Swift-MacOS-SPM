@@ -13,6 +13,7 @@ public enum YLMouseTrackingPhase {
     case entered
     case moved
     case exited
+    case cancelled
 }
 
 /// 鼠标跟踪事件回调
@@ -77,6 +78,11 @@ private final class YLMouseTracker: NSResponder {
     override func mouseMoved(with event: NSEvent) {
         guard let view else { return }
         handler?(view, .moved, event)
+    }
+    
+    override func mouseCancelled(with event: NSEvent) {
+        guard let view else { return }
+        handler?(view, .cancelled, event)
     }
     
     deinit {
