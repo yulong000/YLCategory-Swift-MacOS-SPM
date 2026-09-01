@@ -97,11 +97,11 @@ public let OwnerAccountID: Int? = {
 
 /// app是否安装
 public func AppIsInstalled(_ bundleId: String) -> Bool {
-    guard let url = AppUrl(bundleId) else { return false }
+    guard let url = AppUrl(of: bundleId) else { return false }
     return FileManager.default.fileExists(atPath: url.path)
 }
 /// 根据bundle ID获取app的安装路径
-public func AppUrl(_ bundleId: String) -> URL? {
+public func AppUrl(of bundleId: String) -> URL? {
     if #available(macOS 12.0, *) {
         // 获取所有匹配 App 的 URL
         let urls = NSWorkspace.shared.urlsForApplications(withBundleIdentifier: bundleId)
@@ -138,7 +138,7 @@ public func AppVersion(_ bundleId: String) -> String? {
 }
 /// 根据bundle ID获取某个app的Info中的某个值
 public func AppInfoValue(for key: String, bundleId: String) -> String? {
-    guard let appUrl = AppUrl(bundleId) else { return nil }
+    guard let appUrl = AppUrl(of: bundleId) else { return nil }
     return AppInfoValue(for: key, appUrl: appUrl)
 }
 /// 根据app路径获取app的版本号

@@ -35,10 +35,22 @@ open class KVO: NSObject {
         guard let keyPath = keyPath, getAllProperties(of: type(of: self)).contains(keyPath) else { return }
         let newValue = change?[.newKey]
         let oldValue = change?[.oldKey]
+        // 2个值相同，不回调
+        if isKVOValueEqual(newValue, oldValue) { return }
         kvoHandler?(keyPath, newValue, oldValue)
     }
     
-    // MARK: - 获取所有属性
+    // MARK: 判断两个kvo返回的值，是否相同
+    private func isKVOValueEqual(_ lhs: Any?, _ rhs: Any?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):                                return true
+        case (nil, _), (_, nil):                        return false
+        case let (lhs as NSObject, rhs as NSObject):    return lhs.isEqual(rhs)
+        default:                                        return false
+        }
+    }
+    
+    // MARK: 获取所有属性
     private func getAllProperties(of cls: AnyClass) -> [String] {
         guard cls != NSObject.self else { return [] }
         var properties = [String]()

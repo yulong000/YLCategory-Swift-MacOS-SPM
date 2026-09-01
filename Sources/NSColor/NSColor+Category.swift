@@ -25,47 +25,54 @@ public extension NSColor {
         }
     }
     
-    // MARK: 传入一个16进制字符串，创建一个color
+    /// 通过16进制字符串，创建color, 创建失败，返回nil
+    /// - Parameter hexString: 16进制字符串，`#FFF, #ffffff, FFFF, fff, FFFFFFFF, #ffffffff`
     convenience init?(hexString: String) {
-        // 去除 # 前缀并验证格式
-        var hex = hexString.hasPrefix("#") ? String(hexString.dropFirst()) : hexString
-        guard !hex.isEmpty, hex.range(of: "^[0-9a-fA-F]{3,8}$", options: .regularExpression) != nil else {
-            assert(false, "Invalid hex string format")
+        // 1. 去除 # 和空格
+        var cleanHex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleanHex.hasPrefix("#") {
+            cleanHex.removeFirst()
+        }
+        
+        // 2. 将 3、4 位扩展为 6、8 位
+        if cleanHex.count == 3 || cleanHex.count == 4 {
+            cleanHex = cleanHex.map { "\($0)\($0)" }.joined()
+        }
+        
+        // 3. 严格校验长度（仅允许 6 或 8 位）
+        guard cleanHex.count == 6 || cleanHex.count == 8 else {
+            assert(false, "Invalid hex string length: \(hexString)")
             return nil
         }
         
-        // 将 3、4 位扩展为 6、8 位
-        if hex.count == 3 || hex.count == 4 {
-            hex = hex.map { "\($0)\($0)" }.joined()
-        }
-        
-        // 提取 RGBA 分量
-        let components = Array(hex)
-        var r = "FF", g = "FF", b = "FF", a = "FF"
-        
-        switch components.count {
-        case 6:
-            r = String(components[0...1])
-            g = String(components[2...3])
-            b = String(components[4...5])
-        case 8:
-            r = String(components[0...1])
-            g = String(components[2...3])
-            b = String(components[4...5])
-            a = String(components[6...7])
-        default:
-            assert(false, "Invalid hex string format")
+        // 4. 使用 Scanner 解析 16 进制数值（天然支持大小写，性能更高）
+        var hexValue: UInt64 = 0
+        guard Scanner(string: cleanHex).scanHexInt64(&hexValue) else {
+            assert(false, "Invalid hex character in string: \(hexString)")
             return nil
         }
         
-        // 转换为浮点颜色值
-        let red = CGFloat(Int(r, radix: 16) ?? 0) / 255.0
-        let green = CGFloat(Int(g, radix: 16) ?? 0) / 255.0
-        let blue = CGFloat(Int(b, radix: 16) ?? 0) / 255.0
-        let alpha = CGFloat(Int(a, radix: 16) ?? 255) / 255.0
+        let red, green, blue, alpha: CGFloat
+        if cleanHex.count == 6 {
+            red   = CGFloat((hexValue & 0xFF0000) >> 16) / 255.0
+            green = CGFloat((hexValue & 0x00FF00) >> 8)  / 255.0
+            blue  = CGFloat(hexValue & 0x0000FF)        / 255.0
+            alpha = 1.0
+        } else {
+            red   = CGFloat((hexValue & 0xFF000000) >> 24) / 255.0
+            green = CGFloat((hexValue & 0x00FF0000) >> 16) / 255.0
+            blue  = CGFloat((hexValue & 0x0000FF00) >> 8)  / 255.0
+            alpha = CGFloat(hexValue & 0x000000FF)        / 255.0
+        }
         
-        // 使用便利构造函数初始化 NSColor
         self.init(red: red, green: green, blue: blue, alpha: alpha)
+    }
+    
+    /// 通过16进制字符串，创建NSColor, 创建失败，返回 `.clear`
+    /// - Parameter hexString: 颜色字符串，`#FFF, #ffffff, FFFF, fff, FFFFFFFF, #ffffffff`
+    /// - Returns: 返回color
+    static func hex(_ hexString: String) -> NSColor {
+        return NSColor(hexString: hexString) ?? .clear
     }
     
     // MARK: - 返回带有透明度的颜色
