@@ -10,7 +10,7 @@ import AppKit
 
 public extension NSImageView {
     
-    /// 图片按比例缩放，填充最短边，裁剪并显示中间部分
+    /// 图片按比例缩放，填充最短边，裁剪并显示中间部分，适合大小固定不变的ImageView
     func aspectFill() {
         guard let image = image else { return }
         
@@ -47,6 +47,14 @@ public extension NSImageView {
                 self.image = resultImage
             }
         }
+    }
+    
+    /// 设置图片居中，保持长宽比铺满，超过部分裁剪，如果尺寸频繁变化的，可以用这个
+    func setAspectFillImage(_ image: NSImage?) {
+        wantsLayer = true
+        layer?.contentsGravity = .resizeAspectFill
+        layer?.masksToBounds = true
+        layer?.contents = image
     }
     
     /// 通过NSImage构造一个NSImageView，附带一些设置信息

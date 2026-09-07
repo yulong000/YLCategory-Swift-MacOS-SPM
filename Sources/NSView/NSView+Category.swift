@@ -71,16 +71,16 @@ public extension NSView {
     }
     
     // MARK: - 设置边框
-    func setBorder(color: NSColor, width: CGFloat) {
+    func setBorder(color: NSColor?, width: CGFloat) {
         wantsLayer = true
-        layer?.borderColor = color.cgColor
+        layer?.borderColor = color?.cgColor
         layer?.borderWidth = width
     }
     
     // MARK: 设置边框颜色
-    func setBorderColor(_ borderColor: NSColor) {
+    func setBorderColor(_ borderColor: NSColor?) {
         wantsLayer = true
-        layer?.borderColor = borderColor.cgColor
+        layer?.borderColor = borderColor?.cgColor
     }
     
     // MARK: 设置边框宽度
@@ -104,7 +104,7 @@ public extension NSView {
     }
     
     // MARK: 设置边框和圆角
-    func setBorder(color: NSColor, width: CGFloat, cornerRadius: CGFloat, isSmoothCorner: Bool = true) {
+    func setBorder(color: NSColor?, width: CGFloat, cornerRadius: CGFloat, isSmoothCorner: Bool = true) {
         setBorder(color: color, width: width)
         setCornerRadius(cornerRadius, isSmoothCorner: isSmoothCorner)
     }

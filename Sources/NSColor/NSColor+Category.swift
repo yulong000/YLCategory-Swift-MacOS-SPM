@@ -86,10 +86,10 @@ public extension NSColor {
     var hexString: String {
         guard let color = usingColorSpace(.sRGB) else { return "#000000" }
         
-        let r = Int(round(redComponent * 255))
-        let g = Int(round(greenComponent * 255))
-        let b = Int(round(blueComponent * 255))
-        let a = Int(round(alphaComponent * 255))
+        let r = Int(round(color.redComponent * 255))
+        let g = Int(round(color.greenComponent * 255))
+        let b = Int(round(color.blueComponent * 255))
+        let a = Int(round(color.alphaComponent * 255))
         if a == 255 {
             return String(format: "#%02X%02X%02X", r, g, b)
         } else {
@@ -100,19 +100,19 @@ public extension NSColor {
     // MARK: 转成16进制字符串 #FFFFFFAA
     var hexStringWithAlpha: String {
         guard let color = usingColorSpace(.sRGB) else { return "#00000000" }
-        let r = Int(round(redComponent * 255))
-        let g = Int(round(greenComponent * 255))
-        let b = Int(round(blueComponent * 255))
-        let a = Int(round(alphaComponent * 255))
+        let r = Int(round(color.redComponent * 255))
+        let g = Int(round(color.greenComponent * 255))
+        let b = Int(round(color.blueComponent * 255))
+        let a = Int(round(color.alphaComponent * 255))
         return String(format: "#%02X%02X%02X%02X", r, g, b, a)
     }
     
     // MARK: 转成16进制字符串 #FFFFFF
     var hexStringWithoutAlpha: String {
         guard let color = usingColorSpace(.sRGB) else { return "#000000" }
-        let r = Int(round(redComponent * 255))
-        let g = Int(round(greenComponent * 255))
-        let b = Int(round(blueComponent * 255))
+        let r = Int(round(color.redComponent * 255))
+        let g = Int(round(color.greenComponent * 255))
+        let b = Int(round(color.blueComponent * 255))
         return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
