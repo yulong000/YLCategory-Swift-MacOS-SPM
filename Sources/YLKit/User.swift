@@ -25,5 +25,12 @@ public struct User {
     public static let fullName: String = NSFullUserName()
     /// 登录名（活动监视器中的用户名）
     public static let loginName: String = NSUserName()
+    /// 是否是用户登录窗口
+    public static var isLoginWindow: Bool {
+        guard let userName = SCDynamicStoreCopyConsoleUser(nil, nil, nil) as? String else {
+            return true
+        }
+        return userName.lowercased() == "loginwindow"
+    }
     
 }
