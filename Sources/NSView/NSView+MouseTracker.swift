@@ -96,7 +96,7 @@ public extension NSView {
     func setMouseTracking(
         options: NSTrackingArea.Options = [
             .mouseEnteredAndExited,
-            .activeInKeyWindow,
+            .activeAlways,
             .inVisibleRect
         ],
         handler: @escaping YLMouseTrackingHandler) {
