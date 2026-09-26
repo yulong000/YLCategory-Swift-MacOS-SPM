@@ -9,42 +9,12 @@ import Foundation
 import IOKit
 
 public struct Device {
-    
-    public struct Core {
         
-        /// CPU 物理核心总数
-        ///
-        /// 样例：
-        /// 12
-        ///
-        /// 对应 system_profiler：
-        /// Total Number of Cores: 12 (8 Performance and 4 Efficiency)
-        let total: Int
-        
-        /// 性能核心数量（Performance Cores）
-        ///
-        /// 样例：
-        /// 8
-        ///
-        /// 对应 system_profiler：
-        /// 8 Performance
-        ///
-        /// Intel Mac 通常为 0
-        let performance: Int
-        
-        /// 能效核心数量（Efficiency Cores）
-        ///
-        /// 样例：
-        /// 4
-        ///
-        /// 对应 system_profiler：
-        /// 4 Efficiency
-        ///
-        /// Intel Mac 通常为 0
-        let efficiency: Int
-    }
-    
-    // MARK: - Hardware Overview
+    /// 用户自己设置的设备名称
+    ///
+    /// 样例
+    /// xxx的MacBook Pro
+    public static var localizedName: String { Host.current().localizedName ?? "Unknown" }
     
     /// Mac 产品名称
     ///
@@ -163,6 +133,73 @@ public struct Device {
     /// IOPlatformUUID
     public static let uuid: String = getHardwareUUID() ?? ""
     
+    /// 本地IP地址
+    ///
+    /// 样例
+    /// 192.168.1.100
+    public static var localIp: String { getLocalIp() }
+    
+    /// 网络IP地址
+    ///
+    /// 样例
+    /// 29.19.222.11
+    public static var networkIp: NetworkIp?
+    
+    
+    public struct Core {
+        
+        /// CPU 物理核心总数
+        ///
+        /// 样例：
+        /// 12
+        ///
+        /// 对应 system_profiler：
+        /// Total Number of Cores: 12 (8 Performance and 4 Efficiency)
+        public let total: Int
+        
+        /// 性能核心数量（Performance Cores）
+        ///
+        /// 样例：
+        /// 8
+        ///
+        /// 对应 system_profiler：
+        /// 8 Performance
+        ///
+        /// Intel Mac 通常为 0
+        public let performance: Int
+        
+        /// 能效核心数量（Efficiency Cores）
+        ///
+        /// 样例：
+        /// 4
+        ///
+        /// 对应 system_profiler：
+        /// 4 Efficiency
+        ///
+        /// Intel Mac 通常为 0
+        public let efficiency: Int
+    }
+    
+    // MARK: 外网IP
+    public struct NetworkIp {
+        /// ip 地址
+        public let ip: String
+        /// 城市
+        public let city: String?
+        /// 地区
+        public let region: String?
+        /// 国家
+        public let country: String?
+        /// 时区
+        public let timezone: String?
+        /// 坐标
+        public let loc: String?
+    }
+    
+}
+
+extension Device {
+    
     // MARK: - Model Name
     
     /// 获取 Mac 产品名称
@@ -173,7 +210,7 @@ public struct Device {
     /// 对应：
     /// Model Name: MacBook Pro
     private static func getModelName() -> String? {
-        guard let value = ioRegistryProperty(serviceName: "IOPlatformExpertDevice", key: "product-name") else {
+        guard let value = ioRegistrySearchProperty(serviceName: "IOPlatformExpertDevice", key: "product-name") else {
             return nil
         }
         
@@ -205,23 +242,17 @@ public struct Device {
         guard entry != 0 else { return nil }
         defer { IOObjectRelease(entry) }
         
-        let keys = [
-            "model-number",
-            "part-number"
-        ]
-        
-        for key in keys {
-            guard let value = IORegistryEntryCreateCFProperty(entry, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() else {
-                continue
+        func value(_ key: String) -> String? {
+            guard let raw = IORegistryEntryCreateCFProperty(entry, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() else {
+                return nil
             }
-            
-            if let result = string(from: value),
-               !result.isEmpty {
-                return result
-            }
+            return string(from: raw)
         }
         
-        return nil
+        let model = value("model-number") ?? ""
+        let region = value("region-info") ?? ""
+    
+        return model + region
     }
     
     // MARK: - Chip
@@ -397,6 +428,133 @@ public struct Device {
         return IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
     }
     
+    /// 递归查找某个key对应的值
+    public static func ioRegistrySearchProperty(serviceName: String, key: String) -> CFTypeRef? {
+        
+        guard let matching = IOServiceMatching(serviceName) else { return nil }
+        
+        let service = IOServiceGetMatchingService(ioKitPort, matching)
+        guard service != 0 else { return nil }
+        defer { IOObjectRelease(service) }
+        
+        return IORegistryEntrySearchCFProperty(
+            service,
+            kIOServicePlane,
+            key as CFString,
+            kCFAllocatorDefault,
+            IOOptionBits(kIORegistryIterateRecursively)
+        )
+    }
+    
+    
+    // MARK: - IP 地址
+    
+    /// 更新外网IP地址
+    public static func updateNetworkIp(completion: ((NetworkIp?) -> Void)? = nil) {
+        getNetworkIp { value in
+            networkIp = value
+            completion?(value)
+        }
+    }
+    
+    /// 获取本地的IP地址
+    private static func getLocalIp() -> String {
+        var address: String = ""
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        
+        if getifaddrs(&ifaddr) == 0 {
+            var ptr = ifaddr
+            
+            while ptr != nil {
+                defer { ptr = ptr?.pointee.ifa_next }
+                
+                guard let interface = ptr?.pointee else { continue }
+                let addrFamily = interface.ifa_addr.pointee.sa_family
+                
+                // IPv4
+                if addrFamily == UInt8(AF_INET) {
+                    let name = String(cString: interface.ifa_name)
+                    
+                    // en0 = Wi-Fi，en1 有时是有线
+                    if name == "en0" || name == "en1" {
+                        
+                        var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                        
+                        getnameinfo(
+                            interface.ifa_addr,
+                            socklen_t(interface.ifa_addr.pointee.sa_len),
+                            &hostname,
+                            socklen_t(hostname.count),
+                            nil,
+                            0,
+                            NI_NUMERICHOST
+                        )
+                        
+                        address = String(cString: hostname)
+                    }
+                }
+            }
+            
+            freeifaddrs(ifaddr)
+        }
+        
+        return address
+    }
+    
+    /// 获取外网的IP地址
+    private static func getNetworkIp(completion: @escaping (NetworkIp?) -> Void) {
+        guard let url = URL(string: "https://ipinfo.io/json") else {
+            completion(nil)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 10
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        URLSession.shared.dataTask(with: request) { data, resp, err in
+            if let err  {
+                YLLog("获取外网信息 失败：\(err.localizedDescription)", style: .failure)
+                completion(nil)
+                return
+            }
+            
+            guard let response = resp as? HTTPURLResponse,
+                  (200...299).contains(response.statusCode) else {
+                YLLog("获取外网信息 失败: HTTP 状态码：\((resp as? HTTPURLResponse)?.statusCode ?? -1)", style: .failure)
+                completion(nil)
+                return
+            }
+            
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] else {
+                completion(nil)
+                YLLog("获取外网信息 JSON解析失败", style: .failure)
+                return
+            }
+            
+            
+            guard let ip = json.string("ip"),
+                  !ip.isEmpty else {
+                completion(nil)
+                YLLog("获取外网信息 JSON 读取IP地址失败", style: .failure)
+                return
+            }
+            
+            YLLog("获取到外网信息 成功: \(json)", style: .success)
+        
+            let networkIp = NetworkIp(
+                ip: ip,
+                city: json.string("city"),
+                region: json.string("region"),
+                country: json.string("country"),
+                timezone: json.string("timezone"),
+                loc: json.string("loc")
+            )
+            completion(networkIp)
+            
+        }.resume()
+    }
+    
+    
     // MARK: - Convert
     
     /// 将 IORegistry 返回值转换为 String
@@ -425,6 +583,8 @@ public struct Device {
         return nil
     }
     
+    // MARK: - Port
+    
     /// 当前系统使用的 IOKit 默认通信端口
     ///
     /// macOS 12.0+：
@@ -439,4 +599,5 @@ public struct Device {
             return kIOMasterPortDefault
         }
     }
+    
 }
