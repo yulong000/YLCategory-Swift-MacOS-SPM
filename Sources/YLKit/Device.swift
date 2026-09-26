@@ -8,9 +8,9 @@
 import Foundation
 import IOKit
 
-struct Device {
+public struct Device {
     
-    struct Core {
+    public struct Core {
         
         /// CPU 物理核心总数
         ///
@@ -57,7 +57,7 @@ struct Device {
     ///
     /// 对应 system_profiler：
     /// Model Name: MacBook Pro
-    static let modelName: String = getModelName() ?? ""
+    public static let modelName: String = getModelName() ?? ""
     
     /// Mac 型号标识符
     ///
@@ -71,7 +71,7 @@ struct Device {
     ///
     /// 来源：
     /// sysctlbyname("hw.model")
-    static let modelIdentifier: String = getModelIdentifier() ?? ""
+    public static let modelIdentifier: String = getModelIdentifier() ?? ""
     
     /// Mac 销售型号 / 订货号
     ///
@@ -84,7 +84,7 @@ struct Device {
     ///
     /// 注意：
     /// 这个字段并不是所有机型、所有系统版本都一定能从 IORegistry 稳定取得。
-    static let modelNumber: String = getModelNumber() ?? ""
+    public static let modelNumber: String = getModelNumber() ?? ""
     
     /// 芯片名称 / CPU 名称
     ///
@@ -103,7 +103,7 @@ struct Device {
     ///
     /// Intel 机器对应：
     /// Processor Name / Processor Speed
-    static let chip: String = getChip() ?? ""
+    public static let chip: String = getChip() ?? ""
     
     /// 物理内存总容量，单位：Byte
     ///
@@ -122,7 +122,7 @@ struct Device {
     ///     fromByteCount: Int64(Device.memory),
     ///     countStyle: .memory
     /// )
-    static let memory: UInt64 = ProcessInfo.processInfo.physicalMemory
+    public static let memory: UInt64 = ProcessInfo.processInfo.physicalMemory
     
     /// CPU 核心信息
     ///
@@ -137,7 +137,7 @@ struct Device {
     ///
     /// 对应 system_profiler：
     /// Total Number of Cores: 12 (8 Performance and 4 Efficiency)
-    static let core: Core = getCore()
+    public static let core: Core = getCore()
     
     /// 设备序列号
     ///
@@ -149,7 +149,7 @@ struct Device {
     ///
     /// 来源：
     /// IOPlatformSerialNumber
-    static let serialNumber: String = getSerialNumber() ?? ""
+    public static let serialNumber: String = getSerialNumber() ?? ""
     
     /// 硬件 UUID
     ///
@@ -161,7 +161,7 @@ struct Device {
     ///
     /// 来源：
     /// IOPlatformUUID
-    static let uuid: String = getHardwareUUID() ?? ""
+    public static let uuid: String = getHardwareUUID() ?? ""
     
     // MARK: - Model Name
     
@@ -333,7 +333,7 @@ struct Device {
     /// Intel：
     /// sysctlString("machdep.cpu.brand_string")
     /// -> Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-    private static func sysctlString(_ name: String) -> String? {
+    public static func sysctlString(_ name: String) -> String? {
         // 先获取大小
         var size: size_t = 0
         guard sysctlbyname(name, nil, &size, nil, 0) == 0,
@@ -361,7 +361,7 @@ struct Device {
     ///
     /// sysctlInt("hw.perflevel1.physicalcpu")
     /// -> 4
-    private static func sysctlInt(_ name: String) -> Int? {
+    public static func sysctlInt(_ name: String) -> Int? {
         var value: Int32 = 0
         var size = MemoryLayout<Int32>.size
         
@@ -386,7 +386,7 @@ struct Device {
     ///
     /// 可能返回：
     /// V7TXXNHYX5
-    private static func ioRegistryProperty(serviceName: String, key: String) -> CFTypeRef? {
+    public static func ioRegistryProperty(serviceName: String, key: String) -> CFTypeRef? {
         
         guard let matching = IOServiceMatching(serviceName) else { return nil }
         
@@ -411,7 +411,7 @@ struct Device {
     ///
     /// 转换后：
     /// "MacBook Pro"
-    private static func string(from value: Any) -> String? {
+    public static func string(from value: Any) -> String? {
         
         if let string = value as? String {
             return string.trimmingCharacters(in: .controlCharacters).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -432,7 +432,7 @@ struct Device {
     ///
     /// macOS 10.14 ~ 11：
     /// kIOMasterPortDefault
-    static var ioKitPort: mach_port_t {
+    public static var ioKitPort: mach_port_t {
         if #available(macOS 12.0, *) {
             return kIOMainPortDefault
         } else {
