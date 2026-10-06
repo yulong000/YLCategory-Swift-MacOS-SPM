@@ -45,6 +45,9 @@ open class KVO: NSObject {
         switch (lhs, rhs) {
         case (nil, nil):                                return true
         case (nil, _), (_, nil):                        return false
+        case (is NSArray, is NSArray),
+             (is NSDictionary, is NSDictionary),
+             (is NSSet, is NSSet):                      return false
         case let (lhs as NSObject, rhs as NSObject):    return lhs.isEqual(rhs)
         default:                                        return false
         }
