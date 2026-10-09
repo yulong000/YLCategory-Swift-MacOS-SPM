@@ -352,7 +352,7 @@ public class YLPermissionManager: NSObject {
                                  Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
                                  Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
     
-    private static func bundleImage(_ name: String) -> NSImage {
+    static func bundleImage(_ name: String) -> NSImage {
         let bundleName = "YLCategory-Swift-MacOS_YLPermissionManager.bundle"
         var candidates: [URL] = []
         
