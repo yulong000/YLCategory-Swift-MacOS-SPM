@@ -352,10 +352,32 @@ public class YLPermissionManager: NSObject {
                                  Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
                                  Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
     
-    static func bundleImage(_ name: String) -> NSImage {
-        if let imageUrl = Bundle.module.url(forResource: name, withExtension: ""),
-           let image = NSImage(contentsOf: imageUrl) {
-            return image
+    private static func bundleImage(_ name: String) -> NSImage {
+        let bundleName = "YLCategory-Swift-MacOS_YLPermissionManager.bundle"
+        var candidates: [URL] = []
+        
+        // 当前app的资源目录
+        if let resourceURL = Bundle.main.resourceURL {
+            candidates.append(resourceURL)
+        }
+        
+        // 沿目录向上，查找外层app的资源目录
+        var parentURL = Bundle.main.bundleURL.deletingLastPathComponent()
+        while parentURL.path != "/" {
+            if parentURL.pathExtension == "app",
+               let resourceURL = Bundle(url: parentURL)?.resourceURL {
+                candidates.append(resourceURL)
+            }
+            parentURL = parentURL.deletingLastPathComponent()
+        }
+        
+        for candidate in candidates {
+            let bundleURL = candidate.appendingPathComponent(bundleName)
+            if let bundle = Bundle(url: bundleURL),
+               let imageURL = bundle.url(forResource: name, withExtension: ""),
+               let image = NSImage(contentsOf: imageURL) {
+                return image
+            }
         }
         return NSImage()
     }
