@@ -73,59 +73,24 @@ public class YLPermissionManager: NSObject {
                     }
                     return
                 }
-                // 有权限未授权，弹出授权窗口
-                if self.permissionWC == nil {
-                    self.permissionWC = YLPermissionWindowController()
-                    self.permissionWC?.permissionVc.allAuthPassedHandler = {
-                        // 已全部授权
-                        self.monitorTimer?.invalidate()
-                        self.monitorTimer = nil
-                        self.passAuth()
-                    }
-                    self.permissionWC?.permissionVc.skipHandler = {
-                        // 跳过
-                        self.skipAuth()
-                    }
-                    self.permissionWC?.permissionVc.quitHandler = {
-                        // 退出
-                        self.quitHandler?()
-                    }
-                    self.permissionWC?.closeHandler = {
-                        // 点击了关闭按钮
-                        self.monitorTimer?.invalidate()
-                        self.monitorTimer = nil
-                        self.permissionWC = nil
-                    }
-                    self.permissionWC?.permissionVc.authTypes = authTypes
-                    self.permissionWC?.window?.orderFrontRegardless()
-                    NSApp.activate(ignoringOtherApps: true)
-                } else {
+
+                // 已有授权窗口，正常刷新
+                if self.permissionWC != nil {
                     self.permissionWC?.permissionVc.refreshAllAuthState()
+                    return
                 }
+
+                // 首次未通过，稍后复核，避免偶发误判
+                self.recheckPermissionAuth(authTypes, timer: timer, stopMonitoring: true)
             } else {
                 self.second += 1
                 if self.second >= repeatSeconds {
                     // 达到了设置的间隔秒数
                     self.second = 0
                     if self.allAuthPassed == false {
-                        // 有权限未授权，弹出授权窗口
+                        // 首次未通过，稍后复核，避免后台检测时偶发误判
                         if self.permissionWC == nil {
-                            self.permissionWC = YLPermissionWindowController()
-                            self.permissionWC?.permissionVc.allAuthPassedHandler = {
-                                // 已全部授权
-                                self.passAuth()
-                            }
-                            self.permissionWC?.permissionVc.skipHandler = {
-                                // 跳过
-                                self.skipAuth()
-                            }
-                            self.permissionWC?.permissionVc.quitHandler = {
-                                // 退出
-                                self.quitHandler?()
-                            }
-                            self.permissionWC?.permissionVc.authTypes = authTypes
-                            self.permissionWC?.window?.orderFrontRegardless()
-                            NSApp.activate(ignoringOtherApps: true)
+                            self.recheckPermissionAuth(authTypes, timer: timer, stopMonitoring: false)
                         }
                     } else {
                         // 都已授权
@@ -169,30 +134,7 @@ public class YLPermissionManager: NSObject {
         monitorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { [weak self] timer in
             guard let self = self else { return }
             if self.permissionWC == nil {
-                self.permissionWC = YLPermissionWindowController()
-                self.permissionWC?.permissionVc.allAuthPassedHandler = {
-                    // 已全部授权
-                    self.monitorTimer?.invalidate()
-                    self.monitorTimer = nil
-                    self.passAuth()
-                }
-                self.permissionWC?.permissionVc.skipHandler = {
-                    // 跳过
-                    self.skipAuth()
-                }
-                self.permissionWC?.permissionVc.quitHandler = {
-                    // 退出
-                    self.quitHandler?()
-                }
-                self.permissionWC?.closeHandler = {
-                    // 点击了关闭按钮
-                    self.monitorTimer?.invalidate()
-                    self.monitorTimer = nil
-                    self.permissionWC = nil
-                }
-                self.permissionWC?.permissionVc.authTypes = authTypes
-                self.permissionWC?.window?.orderFrontRegardless()
-                NSApp.activate(ignoringOtherApps: true)
+                self.presentPermissionWindow(authTypes, stopMonitoring: true)
             } else {
                 self.permissionWC?.permissionVc.refreshAllAuthState()
             }
@@ -328,6 +270,62 @@ public class YLPermissionManager: NSObject {
     private var monitorTimer: Timer? = nil
     private var skipped: Bool = false
     
+    /// 首次检测失败后延迟复核，连续两次失败才显示授权窗口
+    private func recheckPermissionAuth(_ authTypes: [YLPermissionModel], timer: Timer, stopMonitoring: Bool) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            guard let self = self,
+                  let currentTimer = self.monitorTimer,
+                  currentTimer === timer,
+                  currentTimer.isValid else { return }
+            if self.allAuthPassed {
+                if stopMonitoring {
+                    currentTimer.invalidate()
+                    self.monitorTimer = nil
+                }
+                if self.permissionWC != nil {
+                    self.passAuth()
+                }
+                return
+            }
+            // 再次未通过，才弹出授权窗口
+            self.presentPermissionWindow(authTypes, stopMonitoring: stopMonitoring)
+        }
+    }
+
+    /// 创建授权窗口；持续监听时，授权通过后仍保留定时器
+    private func presentPermissionWindow(_ authTypes: [YLPermissionModel], stopMonitoring: Bool) {
+        guard permissionWC == nil else { return }
+        permissionWC = YLPermissionWindowController()
+        permissionWC?.permissionVc.allAuthPassedHandler = { [weak self] in
+            // 已全部授权
+            guard let self = self else { return }
+            if stopMonitoring {
+                self.monitorTimer?.invalidate()
+                self.monitorTimer = nil
+            }
+            self.passAuth()
+        }
+        permissionWC?.permissionVc.skipHandler = { [weak self] in
+            // 跳过
+            self?.skipAuth()
+        }
+        permissionWC?.permissionVc.quitHandler = { [weak self] in
+            // 退出
+            self?.quitHandler?()
+        }
+        if stopMonitoring {
+            permissionWC?.closeHandler = { [weak self] in
+                // 点击了关闭按钮
+                self?.monitorTimer?.invalidate()
+                self?.monitorTimer = nil
+                self?.permissionWC = nil
+            }
+        }
+        permissionWC?.permissionVc.authTypes = authTypes
+        permissionWC?.window?.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     // MARK: 通过授权
     private func passAuth() {
         permissionWC?.close()
