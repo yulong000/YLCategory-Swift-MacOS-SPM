@@ -350,7 +350,7 @@ public class YLPermissionManager: NSObject {
                                  Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
                                  Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
     
-    private static func bundleImage(_ name: String) -> NSImage {
+    static func bundleImage(_ name: String) -> NSImage {
         if let imageUrl = Bundle.module.url(forResource: name, withExtension: ""),
            let image = NSImage(contentsOf: imageUrl) {
             return image
