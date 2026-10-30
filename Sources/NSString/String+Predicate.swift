@@ -18,7 +18,16 @@ public extension String {
     }
     
     /// 是否是中国手机号
-    func isChineseMobileNumber() -> Bool { isValid(by: "^(1[3-9][0-9])\\d{8}$")  }
+    func isChineseMobileNumber() -> Bool { isValid(by: #"^1[3-9][0-9]{9}$"#) }
+    
+    /// 是否是国际号码格式, 适配了带有“+”的格式
+    func isInternationalMobileNumber() -> Bool {
+        if hasPrefix("+86") {
+            // +86是国内的手机号，要严格判断
+            return String(dropFirst(3)).isChineseMobileNumber()
+        }
+        return isValid(by: #"^\+?[0-9]{7,15}$"#)
+    }
     
     /// 是否是有效的邮箱地址
     func isEmailAddress() -> Bool { isValid(by: "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}") }
