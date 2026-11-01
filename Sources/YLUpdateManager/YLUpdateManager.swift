@@ -247,78 +247,88 @@ extension YLUpdateManager {
 #endif
             return
         }
-        let wc = YLUpdateWindowController()
-        wc.showNew(version: version, info: info, isSkipEnable: isSkipEnable && background)
-        wc.window?.center()
-        wc.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async { [self] in
+            let wc = YLUpdateWindowController()
+            wc.showNew(version: version, info: info, isSkipEnable: isSkipEnable && background)
+            wc.window?.center()
+            wc.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
     
     // MARK: 显示当前是最新版本
     private func showCurrentVersionIsLatestAlert() {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = YLUpdateManager.localize("Kind tips")
-        if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-            alert.informativeText = appVersion + " " + YLUpdateManager.localize("Latest version")
-        } else {
-            alert.informativeText = YLUpdateManager.localize("Latest version")
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = YLUpdateManager.localize("Kind tips")
+            if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                alert.informativeText = appVersion + " " + YLUpdateManager.localize("Latest version")
+            } else {
+                alert.informativeText = YLUpdateManager.localize("Latest version")
+            }
+            alert.addButton(withTitle: YLUpdateManager.localize("Sure"))
+            alert.runModal()
         }
-        alert.addButton(withTitle: YLUpdateManager.localize("Sure"))
-        alert.runModal()
     }
     
     // MARK: 显示强制升级
     public func showForceUpdateAlert(downloadUrl: String) {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = YLUpdateManager.localize("Kind tips")
-        alert.informativeText = YLUpdateManager.localize("Force Update Tips")
-        alert.addButton(withTitle: YLUpdateManager.localize("Click to update"))
-        alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
-        let result = alert.runModal()
-        if result == .alertFirstButtonReturn {
-            if let url = URL(string: downloadUrl) {
-                NSWorkspace.shared.open(url)
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = YLUpdateManager.localize("Kind tips")
+            alert.informativeText = YLUpdateManager.localize("Force Update Tips")
+            alert.addButton(withTitle: YLUpdateManager.localize("Click to update"))
+            alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
+            let result = alert.runModal()
+            if result == .alertFirstButtonReturn {
+                if let url = URL(string: downloadUrl) {
+                    NSWorkspace.shared.open(url)
+                }
             }
+            NSApp.terminate(nil)
         }
-        NSApp.terminate(nil)
     }
     
     // MARK: 显示日期过期的alert弹窗
     public func showDateExpiredAlert(downloadUrl: String) {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = YLUpdateManager.localize("Kind tips")
-        alert.informativeText = String(format: YLUpdateManager.localize("Expire Tips"), YLUpdateManager.appName)
-        alert.addButton(withTitle: YLUpdateManager.localize("Click to download"))
-        alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
-        if alert.runModal() == .alertFirstButtonReturn {
-            if let url = URL(string: downloadUrl) {
-                NSWorkspace.shared.open(url)
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = YLUpdateManager.localize("Kind tips")
+            alert.informativeText = String(format: YLUpdateManager.localize("Expire Tips"), YLUpdateManager.appName)
+            alert.addButton(withTitle: YLUpdateManager.localize("Click to download"))
+            alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
+            if alert.runModal() == .alertFirstButtonReturn {
+                if let url = URL(string: downloadUrl) {
+                    NSWorkspace.shared.open(url)
+                }
             }
+            NSApp.terminate(nil)
         }
-        NSApp.terminate(nil)
     }
     
     // MARK: 显示系统版本过期的alert弹窗
     public func showOSVersionExpiredAlert(downloadUrl: String) {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = YLUpdateManager.localize("Kind tips")
-        alert.informativeText = String(format: YLUpdateManager.localize("OS Expire Tips"), YLUpdateManager.appName)
-        alert.addButton(withTitle: YLUpdateManager.localize("Click to update"))
-        alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
-        if alert.runModal() == .alertFirstButtonReturn {
-            if let url = URL(string: downloadUrl) {
-                NSWorkspace.shared.open(url)
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = YLUpdateManager.localize("Kind tips")
+            alert.informativeText = String(format: YLUpdateManager.localize("OS Expire Tips"), YLUpdateManager.appName)
+            alert.addButton(withTitle: YLUpdateManager.localize("Click to update"))
+            alert.addButton(withTitle: YLUpdateManager.localize("Quit"))
+            if alert.runModal() == .alertFirstButtonReturn {
+                if let url = URL(string: downloadUrl) {
+                    NSWorkspace.shared.open(url)
+                }
             }
+            NSApp.terminate(nil)
         }
-        NSApp.terminate(nil)
     }
     
     // MARK: 字符串转日期
