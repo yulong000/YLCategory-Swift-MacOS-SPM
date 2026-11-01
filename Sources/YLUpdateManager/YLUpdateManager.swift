@@ -49,45 +49,47 @@ public class YLUpdateManager: NSObject {
         }
         
         let task = URLSession.shared.dataTask(with: URL(string: xml)!) { [self] data, response, error in
-            guard let data = data, error == nil else {
-                // 接口报错，判断本地时间
-                if let date = expiredDate, date.timeIntervalSinceNow <= 0 {
-                    showDateExpiredAlert(downloadUrl: url)
-                }
-                return
-            }
-            // xml 解析
-            let parser = XMLParser(data: data)
-            parser.delegate = xmlDelegate
-            parser.parse()
-#if DEBUG
-            print("线下版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
-            print("强制更新信息:\n\(xmlDelegate.update?.toJson() ?? [:])")
-#endif
-            // 解析完成
-            if let update = xmlDelegate.update, update.BundleId == Bundle.main.bundleIdentifier {
-                // 解析成功
-                if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                   let mini = update.MiniVersion, !mini.isEmpty,
-                   mini.compare(appVersion, options: .numeric) == .orderedDescending {
-                    // 低于设置的最小版本号
-                    showForceUpdateAlert(downloadUrl: url)
+            DispatchQueue.main.async { [self] in
+                guard let data = data, error == nil else {
+                    // 接口报错，判断本地时间
+                    if let date = expiredDate, date.timeIntervalSinceNow <= 0 {
+                        showDateExpiredAlert(downloadUrl: url)
+                    }
                     return
                 }
-                if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
-                    // 设置了过期时间
-                    if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
-                        showDateExpiredAlert(downloadUrl: url)
+                // xml 解析
+                let parser = XMLParser(data: data)
+                parser.delegate = xmlDelegate
+                parser.parse()
+#if DEBUG
+                print("线下版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
+                print("强制更新信息:\n\(xmlDelegate.update?.toJson() ?? [:])")
+#endif
+                // 解析完成
+                if let update = xmlDelegate.update, update.BundleId == Bundle.main.bundleIdentifier {
+                    // 解析成功
+                    if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                       let mini = update.MiniVersion, !mini.isEmpty,
+                       mini.compare(appVersion, options: .numeric) == .orderedDescending {
+                        // 低于设置的最小版本号
+                        showForceUpdateAlert(downloadUrl: url)
                         return
                     }
-                }
-                if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
-                    // 设置了过期系统版本
-                    let sv = ProcessInfo.processInfo.operatingSystemVersion
-                    let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
-                    if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
-                        showOSVersionExpiredAlert(downloadUrl: url)
-                        return
+                    if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
+                        // 设置了过期时间
+                        if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
+                            showDateExpiredAlert(downloadUrl: url)
+                            return
+                        }
+                    }
+                    if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
+                        // 设置了过期系统版本
+                        let sv = ProcessInfo.processInfo.operatingSystemVersion
+                        let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
+                        if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
+                            showOSVersionExpiredAlert(downloadUrl: url)
+                            return
+                        }
                     }
                 }
             }
