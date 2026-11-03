@@ -115,65 +115,120 @@ open class __YLLog {
     }
 }
 
-/// 优先使用 JSON 格式化，保留中文，并固定字典字段顺序。
-fileprivate func YLLogJSON(_ value: Any) -> String? {
-    guard JSONSerialization.isValidJSONObject(value),
-          let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) else { return nil }
-    return String(data: data, encoding: .utf8)
+/// 为无法反射的对象或需要控制日志字段的模型提供自定义内容。
+public protocol YLLogRepresentable {
+    var ylLogRepresentation: Any { get }
 }
 
-/// 用 JSON 编码处理引号、反斜杠和控制字符，中文保持可读。
+/// 格式化任意值；最多展开 12 层，并标记循环引用。输出用于日志，不保证是合法 JSON。
+public func YLPrettyPrinted(_ value: Any) -> String {
+    YLLogFormatter().format(value)
+}
+
+public extension Array {
+    var prettyPrinted: String { YLPrettyPrinted(self) }
+}
+
+public extension Dictionary {
+    var prettyPrinted: String { YLPrettyPrinted(self) }
+}
+
+public extension Set {
+    var prettyPrinted: String { YLPrettyPrinted(self) }
+}
+
+public extension Data {
+    var prettyPrinted: String { YLPrettyPrinted(self) }
+}
+
+public extension NSObject {
+    var prettyPrinted: String { YLPrettyPrinted(self) }
+}
+
+fileprivate func YLLogFormat(_ value: Any) -> String {
+    YLPrettyPrinted(value)
+}
+
 fileprivate func YLLogQuoted(_ string: String) -> String {
     guard let data = try? JSONSerialization.data(withJSONObject: [string]),
-          let json = String(data: data, encoding: .utf8) else {
-        return "\"\(string)\""
-    }
+          let json = String(data: data, encoding: .utf8) else { return "\"\(string)\"" }
     return String(json.dropFirst().dropLast())
 }
 
-fileprivate func YLLogFormat(_ value: Any, indentLevel: Int = 0, nested: Bool = false) -> String {
-    let indent = String(repeating: "  ", count: indentLevel)
-    let childIndent = indent + "  "
+fileprivate final class YLLogFormatter {
+    private var activeObjects = Set<ObjectIdentifier>()
 
-    if let data = value as? Data {
-        let content: String
-        if let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) {
-            content = YLLogFormat(object, indentLevel: indentLevel, nested: true)
-        } else {
-            content = String(data: data, encoding: .utf8) ?? String(describing: data)
+    func format(_ value: Any, depth: Int = 0, nested: Bool = false) -> String {
+        guard depth < 12 else { return "<最大展开深度>" }
+        let mirror = Mirror(reflecting: value)
+        if mirror.displayStyle == .optional {
+            guard let wrapped = mirror.children.first else { return "nil" }
+            return format(wrapped.value, depth: depth, nested: nested)
         }
-        return "DATA:【 \(content) 】"
-    }
-    if let dictionary = value as? [AnyHashable: Any] {
-        if let json = YLLogJSON(dictionary) {
-            return json.replacingOccurrences(of: "\n", with: "\n" + indent)
+        if value is NSNull { return "null" }
+        if let string = value as? String { return nested ? YLLogQuoted(string) : string }
+        if let number = value as? NSNumber,
+           let data = try? JSONSerialization.data(withJSONObject: [number]),
+           let json = String(data: data, encoding: .utf8) {
+            return String(json.dropFirst().dropLast())
         }
-        // Date、URL、Data 或非字符串键等不能直接转 JSON 时，递归格式化。
-        let entries = dictionary.map { (String(describing: $0.key), $0.value) }
-            .sorted { $0.0 < $1.0 }
-            .map { key, item in
-                childIndent + YLLogQuoted(key) + ": " + YLLogFormat(item, indentLevel: indentLevel + 1, nested: true)
+        if let date = value as? Date { return String(describing: date) }
+        if let url = value as? URL { return nested ? YLLogQuoted(url.absoluteString) : url.absoluteString }
+        if let data = value as? Data {
+            if let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) {
+                return "DATA:【 " + format(object, depth: depth + 1, nested: true) + " 】"
             }
-        return entries.isEmpty ? "{}" : "{\n" + entries.joined(separator: ",\n") + "\n" + indent + "}"
-    }
-    if let array = value as? [Any] {
-        if let json = YLLogJSON(array) {
-            return json.replacingOccurrences(of: "\n", with: "\n" + indent)
+            return "DATA:【 " + (String(data: data, encoding: .utf8) ?? String(describing: data)) + " 】"
         }
-        let entries = array.map {
-            childIndent + YLLogFormat($0, indentLevel: indentLevel + 1, nested: true)
+
+        // 在集合桥接或自定义内容展开前检测对象，避免互相引用时无限递归。
+        var identity: ObjectIdentifier?
+        if mirror.displayStyle == .class {
+            let id = ObjectIdentifier(value as AnyObject)
+            guard activeObjects.insert(id).inserted else {
+                return "<循环引用: \(String(describing: type(of: value)))>"
+            }
+            identity = id
         }
-        return entries.isEmpty ? "[]" : "[\n" + entries.joined(separator: ",\n") + "\n" + indent + "]"
+        defer {
+            if let identity { activeObjects.remove(identity) }
+        }
+        if let custom = value as? YLLogRepresentable {
+            return format(custom.ylLogRepresentation, depth: depth + 1, nested: nested)
+        }
+
+        let indent = String(repeating: "  ", count: depth)
+        let childIndent = indent + "  "
+        func container(_ entries: [String], open: String, close: String) -> String {
+            entries.isEmpty ? open + close
+                : open + "\n" + entries.map { childIndent + $0 }.joined(separator: ",\n") + "\n" + indent + close
+        }
+        if let dictionary = value as? [AnyHashable: Any] {
+            let entries = dictionary.map { (String(describing: $0.key), $0.value) }
+                .sorted { $0.0 < $1.0 }
+                .map { YLLogQuoted($0.0) + ": " + format($0.1, depth: depth + 1, nested: true) }
+            return container(entries, open: "{", close: "}")
+        }
+        if let array = value as? [Any] {
+            return container(array.map { format($0, depth: depth + 1, nested: true) }, open: "[", close: "]")
+        }
+        if mirror.displayStyle == .set {
+            let entries = mirror.children.map { format($0.value, depth: depth + 1, nested: true) }.sorted()
+            return container(entries, open: "[", close: "]")
+        }
+        if mirror.displayStyle == .class || mirror.displayStyle == .struct {
+            var fields: [String] = []
+            var current: Mirror? = mirror
+            while let reflected = current {
+                fields += reflected.children.map {
+                    YLLogQuoted($0.label ?? "?") + ": " + format($0.value, depth: depth + 1, nested: true)
+                }
+                current = reflected.superclassMirror
+            }
+            if !fields.isEmpty {
+                return String(describing: type(of: value)) + " " + container(fields, open: "{", close: "}")
+            }
+        }
+        return String(describing: value)
     }
-    if value is NSNull { return "null" }
-    if let string = value as? String {
-        return nested ? YLLogQuoted(string) : string
-    }
-    // 通过 JSON 保留 NSNumber 的数字/布尔类型，避免把数字 1 打印为 true。
-    if let number = value as? NSNumber,
-       let data = try? JSONSerialization.data(withJSONObject: [number]),
-       let json = String(data: data, encoding: .utf8) {
-        return String(json.dropFirst().dropLast())
-    }
-    return String(describing: value)
 }
