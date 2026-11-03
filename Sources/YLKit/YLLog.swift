@@ -43,18 +43,7 @@ public func YLLog(_ items: Any..., style: __YLLogStyle = .default, file: NSStrin
     guard YL_LOG_RELEASE else { return }
 #endif
     var message: String = ""
-    let formatItems = items.map { item -> String in
-        if let dict = item as? [AnyHashable: Any] {
-            return dict.format()
-        }
-        if let arr = item as? [Any] {
-            return arr.format()
-        }
-        if let data = item as? Data {
-            return data.format()
-        }
-        return "\(item)"
-    }
+    let formatItems = items.map { YLLogFormat($0) }
     message = formatItems.joined(separator: "👈\n") + (formatItems.count > 1 ? "👈" : "")
     if !style.symbol.isEmpty {
         message = "\(style.symbol) \(message)"
@@ -77,7 +66,7 @@ public func YLLog(_ items: Any..., style: __YLLogStyle = .default, file: NSStrin
 
 open class __YLLog {
     
-    public static var shared = __YLLog()
+    public static let shared = __YLLog()
     private init() {}
     
     private var localMonitor: Any?
@@ -109,7 +98,7 @@ open class __YLLog {
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [self] in
             removeKeyMonitor()
         }
     }
@@ -126,119 +115,65 @@ open class __YLLog {
     }
 }
 
-
-fileprivate extension Array {
-
-    func format(with indentLevel: UInt8 = 0) -> String {
-        // 最终输出的内容
-        var desc: String = "[\n"
-        // tab对齐
-        var tab: String = ""
-        for _ in 0..<indentLevel {
-            tab.append("\t")
-        }
-        for obj in self {
-            var valStr = "\(tab)\t"
-            if let temp = obj as? [AnyHashable: Any] {
-                // dict
-                valStr += temp.format(with: indentLevel + 1)
-            } else if let temp = obj as? [Any] {
-                // array
-                valStr += temp.format(with: indentLevel + 1)
-            } else if let temp = obj as? Bool {
-                // bool
-                valStr += temp ? "true" : "false"
-            } else if let temp = obj as? Data {
-                // data
-                valStr += temp.format()
-            } else {
-                valStr += "\(obj)"
-            }
-            valStr.append(",\n")
-            desc.append(valStr)
-        }
-        // 去掉最后一个,号
-        if let range = desc.range(of: ",", options: .backwards) {
-            desc.replaceSubrange(range, with: "")
-        }
-        desc.append("\(tab)]")
-        return desc
-    }
+/// 优先使用 JSON 格式化，保留中文，并固定字典字段顺序。
+fileprivate func YLLogJSON(_ value: Any) -> String? {
+    guard JSONSerialization.isValidJSONObject(value),
+          let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) else { return nil }
+    return String(data: data, encoding: .utf8)
 }
 
-fileprivate extension Dictionary {
-
-    func format(with indentLevel: UInt8 = 0) -> String {
-        
-        // 最终输出的内容
-        var desc: String = "{\n"
-        // tab对齐
-        var tab: String = ""
-        for _ in 0..<indentLevel {
-            tab.append("\t")
-        }
-        
-        for k in keys {
-            let obj = self[k]
-            var key = "\(k)"
-            if key.count > 0 {
-                key = "\"\(key)\""
-            }
-            let keyStr = "\(tab)\t\(key): "
-            var valStr = ""
-            if let temp = obj as? String {
-                // 字符串
-                valStr = "\"\(temp)\""
-            } else if let temp = obj as? Bool {
-                // bool
-                valStr = temp ? "true" : "false"
-            } else if let temp = obj as? [AnyHashable: Any] {
-                // dict
-                valStr = temp.format(with: indentLevel + 1)
-            } else if let temp = obj as? [Any] {
-                // array
-                valStr = temp.format(with: indentLevel + 1)
-            } else if let temp = obj as? Data {
-                // data
-                valStr = temp.format()
-            } else if let temp = obj {
-                valStr = "\(temp)"
-            } else {
-                valStr = "nil"
-            }
-            valStr += ",\n"
-            desc.append(keyStr + valStr)
-        }
-        // 去掉最后一个,号
-        if let range = desc.range(of: ",", options: .backwards) {
-            desc.replaceSubrange(range, with: "")
-        }
-        desc.append("\(tab)}")
-        return desc
+/// 用 JSON 编码处理引号、反斜杠和控制字符，中文保持可读。
+fileprivate func YLLogQuoted(_ string: String) -> String {
+    guard let data = try? JSONSerialization.data(withJSONObject: [string]),
+          let json = String(data: data, encoding: .utf8) else {
+        return "\"\(string)\""
     }
+    return String(json.dropFirst().dropLast())
 }
 
-fileprivate extension Data {
-    func format() -> String {
-        do {
-            let result = try JSONSerialization.jsonObject(with: self, options: [])
-            if let arr = result as? Array<Any> {
-                var str = arr.format()
-                str = str.replacingOccurrences(of: "\t", with: "")
-                str = str.replacingOccurrences(of: "\n", with: " ")
-                return "DATA:【 \(str) 】"
-            }
-            if let dict = result as? [AnyHashable: Any] {
-                var str = dict.format()
-                str = str.replacingOccurrences(of: "\t", with: "")
-                str = str.replacingOccurrences(of: "\n", with: " ")
-                return "DATA:【 \(str)) 】"
-            }
-        } catch {
-            if let str = String(data: self, encoding: .utf8) {
-                return "DATA:【 \(str) 】"
-            }
+fileprivate func YLLogFormat(_ value: Any, indentLevel: Int = 0, nested: Bool = false) -> String {
+    let indent = String(repeating: "  ", count: indentLevel)
+    let childIndent = indent + "  "
+
+    if let data = value as? Data {
+        let content: String
+        if let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) {
+            content = YLLogFormat(object, indentLevel: indentLevel, nested: true)
+        } else {
+            content = String(data: data, encoding: .utf8) ?? String(describing: data)
         }
-        return "\(self)"
+        return "DATA:【 \(content) 】"
     }
+    if let dictionary = value as? [AnyHashable: Any] {
+        if let json = YLLogJSON(dictionary) {
+            return json.replacingOccurrences(of: "\n", with: "\n" + indent)
+        }
+        // Date、URL、Data 或非字符串键等不能直接转 JSON 时，递归格式化。
+        let entries = dictionary.map { (String(describing: $0.key), $0.value) }
+            .sorted { $0.0 < $1.0 }
+            .map { key, item in
+                childIndent + YLLogQuoted(key) + ": " + YLLogFormat(item, indentLevel: indentLevel + 1, nested: true)
+            }
+        return entries.isEmpty ? "{}" : "{\n" + entries.joined(separator: ",\n") + "\n" + indent + "}"
+    }
+    if let array = value as? [Any] {
+        if let json = YLLogJSON(array) {
+            return json.replacingOccurrences(of: "\n", with: "\n" + indent)
+        }
+        let entries = array.map {
+            childIndent + YLLogFormat($0, indentLevel: indentLevel + 1, nested: true)
+        }
+        return entries.isEmpty ? "[]" : "[\n" + entries.joined(separator: ",\n") + "\n" + indent + "]"
+    }
+    if value is NSNull { return "null" }
+    if let string = value as? String {
+        return nested ? YLLogQuoted(string) : string
+    }
+    // 通过 JSON 保留 NSNumber 的数字/布尔类型，避免把数字 1 打印为 true。
+    if let number = value as? NSNumber,
+       let data = try? JSONSerialization.data(withJSONObject: [number]),
+       let json = String(data: data, encoding: .utf8) {
+        return String(json.dropFirst().dropLast())
+    }
+    return String(describing: value)
 }

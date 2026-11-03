@@ -61,14 +61,17 @@ public class YLUpdateManager: NSObject {
                 checkLocalExpiredDate()
                 return
             }
-            // xml 解析
-            let update = try? YLUpdateXMLModel.parse(data: data)
+            
+            guard let update = try? YLUpdateXMLModel.parse(data: data),
+                  update.BundleId == Bundle.main.bundleIdentifier else {
 #if DEBUG
-            print("线下版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
-            print("强制更新信息:\n\(update?.toJson() ?? [:])")
+            print("❌ 线下版 xml 强制更新内容 解析失败:\n\(String(data: data, encoding: .utf8) ?? "")")
 #endif
-            // 解析完成
-            guard let update, update.BundleId == Bundle.main.bundleIdentifier else { return }
+                return
+            }
+#if DEBUG
+            print("✅ 线下版 xml 强制更新内容 信息:\n\(update.toJsonString())")
+#endif
             // 解析成功
             if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
                let mini = update.MiniVersion, !mini.isEmpty,
@@ -214,7 +217,7 @@ extension YLUpdateManager {
                 if let update = try? YLUpdateXMLModel.parse(data: data),
                    update.BundleId == Bundle.main.bundleIdentifier {
 #if DEBUG
-                    print("✅ 强制更新信息:\n\(update.toJson())")
+                    print("✅ App store 版 xml 强制更新内容 信息:\n\(update.toJsonString())")
 #endif
                     // 解析成功
                     if let force = update.ForceUpdateToTheLatest, force {
@@ -246,7 +249,7 @@ extension YLUpdateManager {
                     }
                 } else {
 #if DEBUG
-                    print("❌ App store 版 xml 内容 解析失败:\n\(String(data: data, encoding: .utf8) ?? "")")
+                    print("❌ App store 版 xml 强制更新内容 解析失败:\n\(String(data: data, encoding: .utf8) ?? "")")
 #endif
                 }
                 // 普通升级
@@ -374,8 +377,9 @@ fileprivate struct YLUpdateXMLModel {
     /// 有新版本，就强制升级
     public var ForceUpdateToTheLatest: Bool?
     
-    public func toJson() -> [String: Any] {
-        return [
+    /// json格式的字符串
+    public func toJsonString() -> String {
+        let json: [String: Any] = [
             "Name": Name ?? "",
             "BundleId": BundleId ?? "",
             "MiniVersion": MiniVersion ?? "",
@@ -383,6 +387,11 @@ fileprivate struct YLUpdateXMLModel {
             "ExpiredDate": ExpiredDate ?? "",
             "ForceUpdateToTheLatest": ForceUpdateToTheLatest ?? false
         ]
+        guard let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
+              let string = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return string
     }
 }
 
