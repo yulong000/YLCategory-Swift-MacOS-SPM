@@ -149,10 +149,9 @@ fileprivate func YLLogFormat(_ value: Any) -> String {
     YLPrettyPrinted(value)
 }
 
+// 日志以阅读为目的，保留字符串原始内容，不做 JSON 转义。
 fileprivate func YLLogQuoted(_ string: String) -> String {
-    guard let data = try? JSONSerialization.data(withJSONObject: [string]),
-          let json = String(data: data, encoding: .utf8) else { return "\"\(string)\"" }
-    return String(json.dropFirst().dropLast())
+    "\"\(string)\""
 }
 
 fileprivate final class YLLogFormatter {
