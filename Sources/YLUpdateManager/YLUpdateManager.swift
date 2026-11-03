@@ -16,6 +16,7 @@ public class YLUpdateManager: NSObject {
     /// - Parameters:
     ///   - appID: app 的唯一标识
     ///   - xml: 强制更新配置链接（下载XML配置文件，根据配置参数判断）
+    ///   - localDate: yyyy-MM-dd,  本地的过期时间，如果XML获取不到，且超过这个时间，就强制更新
     ///   - skipEnable: 是否可以跳过当前更新版本
     ///   当有新版本时，从该链接获取配置信息，来判断是否强制更新
     ///         "Name" :  "xxx"                                      app名字,
@@ -25,10 +26,14 @@ public class YLUpdateManager: NSObject {
     ///         "ExpiredDate":  "2025-10-30"                过期时间
     ///         "ExpiredOSVersion":  "17.0"                  过期的系统版本号
     ///         4个判断条件，优先级从上往下递减
-    public func set(appID: String, forceUpdate xml: String? = nil, isSkipEnable: Bool = false) {
+    public func set(appID: String, forceUpdate xml: String? = nil, expiredDate localDate: String? = nil, isSkipEnable: Bool = false) {
         self.appID = appID
         self.forceUpdateUrl = xml
         self.isSkipEnable = isSkipEnable
+        self.localExpiredDate = localDate.flatMap { dateWith($0) }
+        if xml == nil || xml!.isEmpty {
+            self.checkLocalExpiredDate()
+        }
     }
     
     /// 设置线下版的强制更新参数
@@ -36,65 +41,70 @@ public class YLUpdateManager: NSObject {
     ///   - xml: 强制更新XML下载地址
     ///   - localDate: yyyy-MM-dd,  本地的过期时间，如果XML获取不到，且超过这个时间，就强制更新
     ///   - url: 线下版的下载地址
-    public func setOffline(forceUpdate xml: String? = nil, expiredDate localDate: String, downloadUrl url: String) {
+    public func setOffline(forceUpdate xml: String? = nil, expiredDate localDate: String? = nil, downloadUrl url: String) {
         self.forceUpdateUrl = xml
         self.offlineDownloadUrl = url
-        let expiredDate = dateWith(localDate)
-        guard let xml = xml, !xml.isEmpty else {
-            // 没有强制更新xml，判断本地时间
-            if let date = expiredDate, date.timeIntervalSinceNow <= 0 {
-                showDateExpiredAlert(downloadUrl: url)
-            }
+        self.localExpiredDate = localDate.flatMap { dateWith($0) }
+        if xml == nil || xml!.isEmpty {
+            self.checkLocalExpiredDate()
+        }
+        
+        guard let xml,
+              !xml.isEmpty,
+              let xmlURL = URL(string: xml) else {
             return
         }
         
-        let task = URLSession.shared.dataTask(with: URL(string: xml)!) { [self] data, response, error in
-            DispatchQueue.main.async { [self] in
-                guard let data = data, error == nil else {
-                    // 接口报错，判断本地时间
-                    if let date = expiredDate, date.timeIntervalSinceNow <= 0 {
-                        showDateExpiredAlert(downloadUrl: url)
-                    }
+        let task = URLSession.shared.dataTask(with: xmlURL) { [self] data, response, error in
+            guard let data = data, error == nil else {
+                // 接口报错，判断本地时间
+                checkLocalExpiredDate()
+                return
+            }
+            // xml 解析
+            let update = try? YLUpdateXMLModel.parse(data: data)
+#if DEBUG
+            print("线下版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
+            print("强制更新信息:\n\(update?.toJson() ?? [:])")
+#endif
+            // 解析完成
+            guard let update, update.BundleId == Bundle.main.bundleIdentifier else { return }
+            // 解析成功
+            if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+               let mini = update.MiniVersion, !mini.isEmpty,
+               mini.compare(appVersion, options: .numeric) == .orderedDescending {
+                // 低于设置的最小版本号
+                showForceUpdateAlert(downloadUrl: url)
+                return
+            }
+            if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
+                // 设置了过期时间
+                if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
+                    showDateExpiredAlert(downloadUrl: url)
                     return
                 }
-                // xml 解析
-                let parser = XMLParser(data: data)
-                parser.delegate = xmlDelegate
-                parser.parse()
-#if DEBUG
-                print("线下版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
-                print("强制更新信息:\n\(xmlDelegate.update?.toJson() ?? [:])")
-#endif
-                // 解析完成
-                if let update = xmlDelegate.update, update.BundleId == Bundle.main.bundleIdentifier {
-                    // 解析成功
-                    if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                       let mini = update.MiniVersion, !mini.isEmpty,
-                       mini.compare(appVersion, options: .numeric) == .orderedDescending {
-                        // 低于设置的最小版本号
-                        showForceUpdateAlert(downloadUrl: url)
-                        return
-                    }
-                    if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
-                        // 设置了过期时间
-                        if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
-                            showDateExpiredAlert(downloadUrl: url)
-                            return
-                        }
-                    }
-                    if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
-                        // 设置了过期系统版本
-                        let sv = ProcessInfo.processInfo.operatingSystemVersion
-                        let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
-                        if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
-                            showOSVersionExpiredAlert(downloadUrl: url)
-                            return
-                        }
-                    }
+            }
+            if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
+                // 设置了过期系统版本
+                let sv = ProcessInfo.processInfo.operatingSystemVersion
+                let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
+                if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
+                    showOSVersionExpiredAlert(downloadUrl: url)
+                    return
                 }
             }
         }
         task.resume()
+    }
+    
+    // MARK: 检查设置的本地过期时间
+    private func checkLocalExpiredDate() {
+        guard let localExpiredDate,
+              localExpiredDate.timeIntervalSinceNow <= 0,
+              let downloadUrl = appStoreUrl ?? offlineDownloadUrl else {
+            return
+        }
+        showDateExpiredAlert(downloadUrl: downloadUrl)
     }
     
     // MARK: - Private
@@ -115,6 +125,8 @@ public class YLUpdateManager: NSObject {
     private(set) var forceUpdateUrl: String?
     /// 线下版的下载地址
     private(set) var offlineDownloadUrl: String?
+    /// 本地过期时间，防止有人禁用了网络，屏蔽更新
+    private var localExpiredDate: Date? = nil
     
     /// app应用商店地址
     private(set) var appStoreUrl: String?
@@ -122,16 +134,14 @@ public class YLUpdateManager: NSObject {
     private(set) var appUpdateUrl: String?
     /// app介绍
     private(set) var appIntroduceUrl: String?
-    /// 解析xml的 delegate
-    public let xmlDelegate = YLUpdateXMLParserDelegate()
     
     // MARK: - 国际化
     
     static func localize(_ key: String) -> String { NSLocalizedString(key, bundle: .module, comment: "") }
     static let appName: String = Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String ??
-                                 Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
-                                 Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
-                                 Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
+    Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ??
+    Bundle.main.localizedInfoDictionary?["CFBundleName"] as? String ??
+    Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
 }
 
 
@@ -140,40 +150,45 @@ extension YLUpdateManager {
     
     // MARK: 检测app store的更新
     public func checkAppStoreUpdates(background: Bool = true) {
-        guard let appID = appID, !appID.isEmpty else { return }
-        let task = URLSession.shared.dataTask(with: URL(string: appUpdateUrl!)!) { data, response, error in
-            guard let data = data, error == nil else { return }
+        guard let appUpdateUrl else { return }
+        let task = URLSession.shared.dataTask(with: URL(string: appUpdateUrl)!) { data, response, error in
+            guard let data = data, error == nil else {
+                self.checkLocalExpiredDate()
+                return
+            }
             do {
-                if let resp = try JSONSerialization.jsonObject(with: data) as? [String : Any] {
-                    if let resultCount = resp["resultCount"] as? Int, resultCount > 0,
-                       let results = resp["results"] as? [[String : Any]],
-                       let dict = results.first,
-                       let latestVersion = dict["version"] as? String,
-                       let info = dict["releaseNotes"] as? String,
-                       let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                       latestVersion.compare(appVersion, options: .numeric) == .orderedDescending {
+                guard let resp = try JSONSerialization.jsonObject(with: data) as? [String : Any] else { return }
+                if let resultCount = resp["resultCount"] as? Int, resultCount > 0,
+                   let results = resp["results"] as? [[String : Any]],
+                   let dict = results.first,
+                   let latestVersion = dict["version"] as? String,
+                   let info = dict["releaseNotes"] as? String,
+                   let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                   latestVersion.compare(appVersion, options: .numeric) == .orderedDescending {
 #if DEBUG
-                        print("当前版本：\(appVersion)  app store 最新版本: \(latestVersion)")
+                    print("当前版本：\(appVersion)  app store 最新版本: \(latestVersion)")
 #endif
-                        DispatchQueue.main.async {
-                            // 有新版本
-                            if let forceUpdateUrl = self.forceUpdateUrl, !forceUpdateUrl.isEmpty {
-                                // 有强制更新url
-                                self.requestServerForUpdateWay(URL(string: forceUpdateUrl)!, currentVersion: appVersion, appStoreVersion: latestVersion, updateInfo: info, background: background)
-                            } else {
-                                self.showNew(version: latestVersion, info: info, background: background)
-                            }
-                        }
+                    // 有新版本
+                    if let forceUpdateUrl = self.forceUpdateUrl,
+                       !forceUpdateUrl.isEmpty,
+                       let forceUpdateURL = URL(string: forceUpdateUrl) {
+                        // 有强制更新url
+                        self.requestServerForUpdateWay(forceUpdateURL,
+                                                       currentVersion: appVersion,
+                                                       appStoreVersion: latestVersion,
+                                                       updateInfo: info,
+                                                       background: background
+                        )
                     } else {
-                        // 已经是最新版本
+                        self.showNew(version: latestVersion, info: info, background: background)
+                    }
+                } else {
+                    // 已经是最新版本
 #if DEBUG
-                        print("已经是最新版本")
+                    print("已经是最新版本")
 #endif
-                        if !background {
-                            DispatchQueue.main.async {
-                                self.showCurrentVersionIsLatestAlert()
-                            }
-                        }
+                    if !background {
+                        self.showCurrentVersionIsLatestAlert()
                     }
                 }
             } catch {
@@ -185,50 +200,54 @@ extension YLUpdateManager {
     
     // MARK: 请求服务器，判断如何升级
     private func requestServerForUpdateWay(_ url: URL, currentVersion: String, appStoreVersion: String, updateInfo: String, background: Bool) {
+        
+        guard let downloadUrl = appStoreUrl else { return }
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async { [self] in
-                if let data = data, error == nil  {
-                    // xml 解析
-                    let parser = XMLParser(data: data)
-                    parser.delegate = xmlDelegate
-                    parser.parse()
+                guard let data, error == nil else {
+                    checkLocalExpiredDate()
+                    return
+                }
+                
+                // 解析完成
+                if let update = try? YLUpdateXMLModel.parse(data: data),
+                   update.BundleId == Bundle.main.bundleIdentifier {
 #if DEBUG
-                    print("App store 版 xml 内容:\n\(String(data: data, encoding: .utf8) ?? "")")
-                    print("强制更新信息:\n\(xmlDelegate.update?.toJson() ?? [:])")
+                    print("✅ 强制更新信息:\n\(update.toJson())")
 #endif
-                    // 解析完成
-                    if let update = xmlDelegate.update,
-                       update.BundleId == Bundle.main.bundleIdentifier,
-                       let downloadUrl = appStoreUrl {
-                        // 解析成功
-                        if let force = update.ForceUpdateToTheLatest, force {
-                            // 强制升级到最新版
-                            showForceUpdateAlert(downloadUrl: downloadUrl)
+                    // 解析成功
+                    if let force = update.ForceUpdateToTheLatest, force {
+                        // 强制升级到最新版
+                        showForceUpdateAlert(downloadUrl: downloadUrl)
+                        return
+                    }
+                    if let mini = update.MiniVersion, !mini.isEmpty,
+                       mini.compare(currentVersion, options: .numeric) == .orderedDescending {
+                        // 低于设置的最小版本号
+                        showForceUpdateAlert(downloadUrl: downloadUrl)
+                        return
+                    }
+                    if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
+                        // 设置了过期时间
+                        if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
+                            showDateExpiredAlert(downloadUrl: downloadUrl)
                             return
-                        }
-                        if let mini = update.MiniVersion, !mini.isEmpty,
-                            mini.compare(currentVersion, options: .numeric) == .orderedDescending {
-                            // 低于设置的最小版本号
-                            showForceUpdateAlert(downloadUrl: downloadUrl)
-                            return
-                        }
-                        if let expiredDate = update.ExpiredDate, !expiredDate.isEmpty {
-                            // 设置了过期时间
-                            if let d = dateWith(expiredDate), d.timeIntervalSinceNow <= 0 {
-                                showDateExpiredAlert(downloadUrl: downloadUrl)
-                                return
-                            }
-                        }
-                        if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
-                            // 设置了过期系统版本
-                            let sv = ProcessInfo.processInfo.operatingSystemVersion
-                            let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
-                            if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
-                                showOSVersionExpiredAlert(downloadUrl: downloadUrl)
-                                return
-                            }
                         }
                     }
+                    if let expiredOSVersion = update.ExpiredOSVersion, !expiredOSVersion.isEmpty {
+                        // 设置了过期系统版本
+                        let sv = ProcessInfo.processInfo.operatingSystemVersion
+                        let sysVersion: String = String(format: "%ld.%ld.%ld", sv.majorVersion, sv.minorVersion, sv.patchVersion)
+                        if sysVersion.compare(expiredOSVersion, options: .numeric) != .orderedAscending {
+                            showOSVersionExpiredAlert(downloadUrl: downloadUrl)
+                            return
+                        }
+                    }
+                } else {
+#if DEBUG
+                    print("❌ App store 版 xml 内容 解析失败:\n\(String(data: data, encoding: .utf8) ?? "")")
+#endif
                 }
                 // 普通升级
                 showNew(version: appStoreVersion, info: updateInfo, background: background)
@@ -338,5 +357,56 @@ extension YLUpdateManager {
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone(identifier: "Asia/Shanghai")
         return formatter.date(from: dateStr)
+    }
+}
+
+fileprivate struct YLUpdateXMLModel {
+    /// app名字
+    public var Name: String?
+    /// app的bundle ID
+    public var BundleId: String?
+    /// 支持最小版本号，小于该版本号的，强制升级
+    public var MiniVersion: String?
+    /// 失效的系统版本号
+    public var ExpiredOSVersion: String?
+    /// 失效的日期, 格式： yyyy-MM-dd
+    public var ExpiredDate: String?
+    /// 有新版本，就强制升级
+    public var ForceUpdateToTheLatest: Bool?
+    
+    public func toJson() -> [String: Any] {
+        return [
+            "Name": Name ?? "",
+            "BundleId": BundleId ?? "",
+            "MiniVersion": MiniVersion ?? "",
+            "ExpiredOSVersion": ExpiredOSVersion ?? "",
+            "ExpiredDate": ExpiredDate ?? "",
+            "ForceUpdateToTheLatest": ForceUpdateToTheLatest ?? false
+        ]
+    }
+}
+
+extension YLUpdateXMLModel {
+    /// 使用独立的 XMLDocument 解析配置，不保留上次请求的数据。
+    static func parse(data: Data) throws -> YLUpdateXMLModel? {
+        let document = try XMLDocument(data: data, options: [.nodeLoadExternalEntitiesNever])
+        guard let root = document.rootElement() else { return nil }
+        
+        func text(_ name: String) -> String? {
+            root.elements(forName: name).first?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        var update = YLUpdateXMLModel()
+        update.Name = text("Name")
+        update.BundleId = text("BundleId")
+        update.MiniVersion = text("MiniVersion")
+        update.ExpiredDate = text("ExpiredDate")
+        update.ExpiredOSVersion = text("ExpiredOSVersion")
+        switch text("ForceUpdateToTheLatest")?.lowercased() {
+        case "true", "1": update.ForceUpdateToTheLatest = true
+        case "false", "0": update.ForceUpdateToTheLatest = false
+        default: update.ForceUpdateToTheLatest = nil
+        }
+        return update
     }
 }
