@@ -539,7 +539,7 @@ extension Device {
                 return
             }
             
-            YLLog("获取到外网信息 成功: \(json)", style: .success)
+            YLLog("获取到外网信息 成功: \(json.prettyPrinted)", style: .success)
         
             let networkIp = NetworkIp(
                 ip: ip,

@@ -49,14 +49,14 @@ public func OpenFilePath(_ path: String) -> Bool {
         try task.run()
         task.waitUntilExit()
     } catch {
-        YLLog("OpenFilePath: \(path) run error: \(error)")
+        YLLog("OpenFilePath: \(path) run error: \(error)", style: .failure)
         return false
     }
     
     if task.terminationStatus != 0 {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let msg = String(data: data, encoding: .utf8)
-        YLLog("OpenFilePath: \(path) error: \(msg ?? "Unknown")")
+        YLLog("OpenFilePath: \(path) error: \(msg ?? "Unknown")", style: .failure)
         return false
     }
     
@@ -131,7 +131,7 @@ public func ExecuteCustomCMD(_ url: String, argus: [String], logEnable: Bool = t
     do {
         try process.run()
     } catch {
-        if logEnable { YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 发生错误: \(error)") }
+        if logEnable { YLLog("ExecuteCMD '\(([url] + argus).joined(separator: " "))' 发生错误: \(error)", style: .failure) }
         return nil
     }
 
@@ -145,18 +145,18 @@ public func ExecuteCustomCMD(_ url: String, argus: [String], logEnable: Bool = t
     let errorOutput = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
     if process.terminationStatus != 0 {
-        if logEnable { YLLog("❌ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)",
+        if logEnable { YLLog("ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行失败: \(errorOutput)",
                              "status: \(process.terminationStatus)",
-                             "reason: \(process.terminationReason)") }
+                             "reason: \(process.terminationReason)", style: .failure) }
         return nil
     }
 
     let result = output.isEmpty ? errorOutput : output
     if logEnable {
         if errorOutput.isEmpty {
-            YLLog("✅ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
+            YLLog("ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)", style: .success)
         } else {
-            YLLog("⚠️ ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)")
+            YLLog("ExecuteCMD '\(([url] + argus).joined(separator: " "))' 执行成功:\n\(result)", style: .warning)
         }
     }
     return result
