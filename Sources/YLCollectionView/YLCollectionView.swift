@@ -10,8 +10,8 @@ import AppKit
 
 open class YLCollectionView: NSView, NSCollectionViewDelegate, NSCollectionViewDataSource, NSCollectionViewDelegateFlowLayout {
     
-    public private(set) var collectionView: NSCollectionView = NSCollectionView()
-    public private(set) var scrollView: NSScrollView = NSScrollView()
+    public let collectionView = NSCollectionView()
+    public let scrollView = YLOverlayScrollView()
     private lazy var clipView: YLCollectionClipView = {
         let clipView = YLCollectionClipView()
         clipView.postsBoundsChangedNotifications = true
@@ -43,11 +43,6 @@ open class YLCollectionView: NSView, NSCollectionViewDelegate, NSCollectionViewD
     private func setupCollectionView() {
         scrollView.contentView = clipView
         scrollView.documentView = collectionView
-        scrollView.borderType = .noBorder
-        scrollView.contentInsets = NSEdgeInsetsZero
-        scrollView.drawsBackground = false
-        scrollView.scrollerStyle = .overlay
-        scrollView.autoresizingMask = [.width, .height]
         addSubview(scrollView)
         
         collectionView.delegate = self
@@ -270,6 +265,32 @@ open class YLCollectionView: NSView, NSCollectionViewDelegate, NSCollectionViewD
         }
         return .zero
     }
+}
+
+// MARK: 自定义ScrollView
+
+open class YLOverlayScrollView: NSScrollView {
+    
+    open override var scrollerStyle: NSScroller.Style {
+        get { super.scrollerStyle }
+        set { super.scrollerStyle = .overlay }
+    }
+    
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        scrollerStyle = .overlay
+        borderType = .noBorder
+        contentInsets = NSEdgeInsetsZero
+        drawsBackground = false
+        autoresizingMask = [.width, .height]
+    }
+    
+    required public init?(coder: NSCoder) {
+        super.init(coder: coder)
+        scrollerStyle = .overlay
+    }
+  
 }
 
 
