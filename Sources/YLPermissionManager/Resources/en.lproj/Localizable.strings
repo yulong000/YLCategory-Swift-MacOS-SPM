@@ -7,21 +7,22 @@
 */
 
 
-"Permission Title" = "Grant %@ permissions";
-"Permission sub Title" = "%@ requires your permission to use, please review and authorize";
-"View permission setting tutorail" = "View permission setting tutorail >>";
-"Accessibility permission authorization" = "Accessibility permission authorization";
-"Screen recording permission authorization" = "Screen recording permission authorization";
-"Full disk access authorization" = "Full disk access authorization";
-"Authorize" = "Authorize";
+"Permission Title" = "Grant %@ permission";
+"Permission sub Title" = "Review and grant the required permissions to use %@.";
+"View permission setting tutorial" = "Watch the permission setup tutorial >>";
+"Accessibility permission authorization" = "Grant Accessibility permission";
+"Device Control and Data Access permission authorization" = "Grant Device Control and Data Access permission";
+"Screen recording permission authorization" = "Grant Screen & System Audio Recording permission";
+"Full disk access authorization" = "Grant Full Disk Access";
+"Authorize" = "Grant permission";
 "Quit App" = "Quit App";
 "Skip" = "Skip";
-
-"Kind tips" = "Kind tips";
-"Accessibility Tips" = "%@ requires you to grant the \"Accessibility\" permission, please use it after authorization. (If permissions are already granted, please remove and re-add them.)";
-"ScreenCapture Tips" = "%@ requires you to grant the \"ScreenCapture\" permission, please use it after authorization. (If permissions are already granted, please remove and re-add them.)";
-"Full disk access Tips" = "%@ requires you to grant the \"Full disk access\" permission, please use it after authorization. (If permissions are already granted, please remove and re-add them.)";
-"To Authorize" = "To Authorize";
+"Kind tips" = "Note";
+"Accessibility Tips" = "%@ needs permission in “Accessibility” to continue. If the app already shows as allowed, remove it from the list and add it again.";
+"Device Control and Data Access Tips" = "%@ needs permission in “Device Control and Data Access” to continue. If the app already shows as allowed, remove it from the list and add it again.";
+"ScreenCapture Tips" = "%@ needs permission in “Screen & System Audio Recording” to continue. If the app already shows as allowed, remove it from the list and add it again.";
+"Full disk access Tips" = "%@ needs permission in “Full Disk Access” to continue. If the app already shows as allowed, remove it from the list and add it again.";
+"To Authorize" = "Open permission settings";
 "Cancel" = "Cancel";
-"Sure" = "Sure";
-"Display in Finder" = "Display in Finder";
+"Sure" = "OK";
+"Display in Finder" = "Show in Finder";

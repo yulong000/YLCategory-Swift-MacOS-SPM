@@ -89,7 +89,11 @@ class YLPermissionItem: NSView {
         case .accessibility:
             // 辅助功能
             iconView.image = YLPermissionManager.bundleImage("Accessbility@2x.png")
-            checkBtn.title = YLPermissionManager.localize("Accessibility permission authorization")
+            if #available(macOS 27.0, *) {
+                checkBtn.title = YLPermissionManager.localize("Device Control and Data Access permission authorization")
+            } else {
+                checkBtn.title = YLPermissionManager.localize("Accessibility permission authorization")
+            }
         case .fullDisk:
             // 完全磁盘
             iconView.image = YLPermissionManager.bundleImage("Folder@2x.png")

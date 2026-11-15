@@ -7,21 +7,22 @@
 */
 
 
-"Permission Title" = "Conceder Permissões ao %@";
-"Permission sub Title" = "O %@ precisa de sua permissão para funcionar corretamente, por favor, veja e autorize";
-"View permission setting tutorail" = "Ver tutorial de configuração de permissões >>";
-"Accessibility permission authorization" = "Autorização de Permissão de Acessibilidade";
-"Screen recording permission authorization" = "Autorização de Permissão de Gravação de Tela";
-"Full disk access authorization" = "Autorização de Permissão de Acesso Total ao Disco";
-"Authorize" = "Autorizar";
-"Quit App" = "Sair do Aplicativo";
-"Skip" = "Pular";
-
-"Kind tips" = "Dicas gentis";
-"Accessibility Tips" = "O %@ requer que você conceda permissão de 'Acessibilidade', por favor, autorize antes de usar. (Se já estiverem concedidas, remova e adicione novamente.)";
-"ScreenCapture Tips" = "O %@ requer que você conceda permissão de 'Gravação de Tela', por favor, autorize antes de usar. (Se já estiverem concedidas, remova e adicione novamente.)";
-"Full disk access Tips" = "O %@ requer que você conceda permissão de 'Acesso Total ao Disco', por favor, autorize antes de usar. (Se já estiverem concedidas, remova e adicione novamente.)";
-"To Authorize" = "Autorizar";
+"Permission Title" = "Conceder a permissão «%@»";
+"Permission sub Title" = "Revê e concede as permissões necessárias para usar %@.";
+"View permission setting tutorial" = "Ver o tutorial de configuração de permissões >>";
+"Accessibility permission authorization" = "Conceder a permissão de «Acessibilidade»";
+"Device Control and Data Access permission authorization" = "Conceder a permissão de «Controlo do dispositivo e acesso a dados»";
+"Screen recording permission authorization" = "Conceder a permissão de «Gravação do ecrã e de áudio do sistema»";
+"Full disk access authorization" = "Conceder «Acesso completo ao disco»";
+"Authorize" = "Permitir";
+"Quit App" = "Sair da aplicação";
+"Skip" = "Ignorar";
+"Kind tips" = "Nota";
+"Accessibility Tips" = "Para usar %@, permite o acesso em «Acessibilidade». Se a aplicação já estiver autorizada, remove-a da lista e volta a adicioná-la.";
+"Device Control and Data Access Tips" = "Para usar %@, permite o acesso em «Controlo do dispositivo e acesso a dados». Se a aplicação já estiver autorizada, remove-a da lista e volta a adicioná-la.";
+"ScreenCapture Tips" = "Para usar %@, permite o acesso em «Gravação do ecrã e de áudio do sistema». Se a aplicação já estiver autorizada, remove-a da lista e volta a adicioná-la.";
+"Full disk access Tips" = "Para usar %@, permite o acesso em «Acesso completo ao disco». Se a aplicação já estiver autorizada, remove-a da lista e volta a adicioná-la.";
+"To Authorize" = "Abrir as definições de permissões";
 "Cancel" = "Cancelar";
-"Sure" = "Confirmar";
-"Display in Finder" = "Exibir no Finder";
+"Sure" = "OK";
+"Display in Finder" = "Mostrar no Finder";

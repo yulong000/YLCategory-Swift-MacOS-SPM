@@ -7,21 +7,22 @@
 */
 
 
-"Permission Title" = "Berechtigung für %@ erteilen";
-"Permission sub Title" = "%@ benötigt Ihre Erlaubnis zur Verwendung. Bitte überprüfen und gewähren Sie die Berechtigung.";
-"View permission setting tutorail" = "Anleitung zur Berechtigungseinstellung ansehen >>";
-"Accessibility permission authorization" = "Barrierefreiheit-Berechtigung autorisieren";
-"Screen recording permission authorization" = "Bildschirmaufzeichnungs-Berechtigung autorisieren";
-"Full disk access authorization" = "Voller Festplattenzugriff autorisieren";
-"Authorize" = "Autorisieren";
+"Permission Title" = "Berechtigung „%@“ erteilen";
+"Permission sub Title" = "Prüfe und erteile die erforderlichen Berechtigungen, um %@ zu verwenden.";
+"View permission setting tutorial" = "Anleitung zum Einrichten der Berechtigungen ansehen >>";
+"Accessibility permission authorization" = "Berechtigung für „Bedienungshilfen“ erteilen";
+"Device Control and Data Access permission authorization" = "Berechtigung für „Gerätesteuerung und Datenzugriff“ erteilen";
+"Screen recording permission authorization" = "Berechtigung für „Aufnahme von Bildschirm & Systemaudio“ erteilen";
+"Full disk access authorization" = "„Festplattenvollzugriff“ erlauben";
+"Authorize" = "Erlauben";
 "Quit App" = "App beenden";
 "Skip" = "Überspringen";
-
 "Kind tips" = "Hinweis";
-"Accessibility Tips" = "%@ benötigt Ihre Erlaubnis zur Verwendung der „Barrierefreiheit“. Bitte gewähren Sie die Berechtigung, um fortzufahren. (Wenn der Zugriff bereits gewährt wurde, entfernen Sie die Berechtigung und fügen Sie sie erneut hinzu.)";
-"ScreenCapture Tips" = "%@ benötigt Ihre Erlaubnis zur Verwendung der „Bildschirmaufzeichnung“. Bitte gewähren Sie die Berechtigung, um fortzufahren. (Wenn der Zugriff bereits gewährt wurde, entfernen Sie die Berechtigung und fügen Sie sie erneut hinzu.)";
-"Full disk access Tips" = "%@ benötigt Ihre Erlaubnis zur Verwendung des „vollen Festplattenzugriffs“. Bitte gewähren Sie die Berechtigung, um fortzufahren. (Wenn der Zugriff bereits gewährt wurde, entfernen Sie die Berechtigung und fügen Sie sie erneut hinzu.)";
-"To Authorize" = "Zur Autorisierung";
+"Accessibility Tips" = "Erlaube %@ den Zugriff unter „Bedienungshilfen“. Ist der Zugriff bereits aktiviert, entferne die App aus der Liste und füge sie erneut hinzu.";
+"Device Control and Data Access Tips" = "Erlaube %@ den Zugriff unter „Gerätesteuerung und Datenzugriff“. Ist der Zugriff bereits aktiviert, entferne die App aus der Liste und füge sie erneut hinzu.";
+"ScreenCapture Tips" = "Erlaube %@ den Zugriff unter „Aufnahme von Bildschirm & Systemaudio“. Ist der Zugriff bereits aktiviert, entferne die App aus der Liste und füge sie erneut hinzu.";
+"Full disk access Tips" = "Erlaube %@ den Zugriff unter „Festplattenvollzugriff“. Ist der Zugriff bereits aktiviert, entferne die App aus der Liste und füge sie erneut hinzu.";
+"To Authorize" = "Berechtigungseinstellungen öffnen";
 "Cancel" = "Abbrechen";
-"Sure" = "Bestätigen";
+"Sure" = "OK";
 "Display in Finder" = "Im Finder anzeigen";

@@ -7,21 +7,22 @@
 */
 
 
-"Permission Title" = "授予%@權限";
-"Permission sub Title" = "%@需要您的許可才能使用，請查看並授權";
-"View permission setting tutorail" = "觀看權限設置教學 >>";
-"Accessibility permission authorization" = "輔助功能權限授權";
-"Screen recording permission authorization" = "錄屏權限授權";
-"Full disk access authorization" = "完全磁盤訪問權限授權";
+"Permission Title" = "授予「%@」權限";
+"Permission sub Title" = "使用 %@ 前，請檢查並授予所需權限。";
+"View permission setting tutorial" = "觀看權限設定教學 >>";
+"Accessibility permission authorization" = "授予「輔助使用」權限";
+"Device Control and Data Access permission authorization" = "授予「裝置控制和資料取用」權限";
+"Screen recording permission authorization" = "授予「螢幕與系統錄音」權限";
+"Full disk access authorization" = "授予「完全取用磁碟」權限";
 "Authorize" = "授權";
-"Quit App" = "退出App";
-"Skip" = "跳過";
-
-"Kind tips" = "溫馨提示";
-"Accessibility Tips" = "%@需要您授予「輔助功能」權限，請授權後使用。（如果顯示您已授權，請刪除後重新添加）";
-"ScreenCapture Tips" = "%@需要您授予「屏幕錄制」權限，請授權後使用。（如果顯示您已授權，請刪除後重新添加）";
-"Full disk access Tips" = "%@需要您授予「完全磁盤訪問」權限，請授權後使用。（如果顯示您已授權，請刪除後重新添加）";
-"To Authorize" = "去授權";
+"Quit App" = "結束 App";
+"Skip" = "略過";
+"Kind tips" = "提醒";
+"Accessibility Tips" = "使用 %@ 前，請授予「輔助使用」權限。若已顯示為允許，請從列表中移除該 App，再重新加入。";
+"Device Control and Data Access Tips" = "使用 %@ 前，請授予「裝置控制和資料取用」權限。若已顯示為允許，請從列表中移除該 App，再重新加入。";
+"ScreenCapture Tips" = "使用 %@ 前，請授予「螢幕與系統錄音」權限。若已顯示為允許，請從列表中移除該 App，再重新加入。";
+"Full disk access Tips" = "使用 %@ 前，請授予「完全取用磁碟」權限。若已顯示為允許，請從列表中移除該 App，再重新加入。";
+"To Authorize" = "前往授權";
 "Cancel" = "取消";
 "Sure" = "確定";
-"Display in Finder" = "在\"訪達\"中顯示";
+"Display in Finder" = "在 Finder 中顯示";

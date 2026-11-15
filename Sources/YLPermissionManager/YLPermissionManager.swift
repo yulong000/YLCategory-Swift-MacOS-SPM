@@ -150,7 +150,11 @@ public class YLPermissionManager: NSObject {
         switch type {
         case .accessibility:
             flag = getPrivacyAccessibilityIsEnabled()
-            tips = "Accessibility Tips"
+            if #available(macOS 27.0, *) {
+                tips = "Device Control and Data Access Tips"
+            } else {
+                tips = "Accessibility Tips"
+            }
             selector = #selector(openPrivacyAccessibilitySetting)
         case .screenCapture:
             flag = getScreenCaptureIsEnabled()

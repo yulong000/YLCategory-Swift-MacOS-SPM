@@ -60,7 +60,7 @@ class YLPermissionViewController: NSViewController {
         return box
     }()
     private lazy var lookBtn: NSButton = {
-        let btn = NSButton(title: YLPermissionManager.localize("View permission setting tutorail"), target: self, action: #selector(lookTutorialVideo))
+        let btn = NSButton(title: YLPermissionManager.localize("View permission setting tutorial"), target: self, action: #selector(lookTutorialVideo))
         btn.bezelColor = .controlAccentColor
         btn.isHidden = YLPermissionManager.shared.tutorialLink == nil || YLPermissionManager.shared.tutorialLink!.isEmpty
         return btn

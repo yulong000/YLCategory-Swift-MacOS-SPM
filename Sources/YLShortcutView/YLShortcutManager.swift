@@ -528,7 +528,8 @@ fileprivate func YLKeyDownEventCallBack(proxy: CGEventTapProxy, type: CGEventTyp
                 return nil
             }
         }
-    case .tapDisabledByTimeout:
+    case .tapDisabledByTimeout,
+         .tapDisabledByUserInput:
         // 超时
         manager.unregisterKeyDownSource()
     default: break
