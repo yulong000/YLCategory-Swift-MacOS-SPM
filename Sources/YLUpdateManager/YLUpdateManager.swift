@@ -32,7 +32,7 @@ public class YLUpdateManager: NSObject {
         self.isSkipEnable = isSkipEnable
         self.localExpiredDate = localDate.flatMap { dateWith($0) }
         if xml == nil || xml!.isEmpty {
-            self.checkLocalExpiredDate()
+            self.checkLocalExpiredDatePassed()
         }
     }
     
@@ -46,7 +46,7 @@ public class YLUpdateManager: NSObject {
         self.offlineDownloadUrl = url
         self.localExpiredDate = localDate.flatMap { dateWith($0) }
         if xml == nil || xml!.isEmpty {
-            self.checkLocalExpiredDate()
+            self.checkLocalExpiredDatePassed()
         }
         
         guard let xml,
@@ -58,7 +58,7 @@ public class YLUpdateManager: NSObject {
         let task = URLSession.shared.dataTask(with: xmlURL) { [self] data, response, error in
             guard let data = data, error == nil else {
                 // 接口报错，判断本地时间
-                checkLocalExpiredDate()
+                checkLocalExpiredDatePassed()
                 return
             }
             
@@ -100,14 +100,16 @@ public class YLUpdateManager: NSObject {
         task.resume()
     }
     
-    // MARK: 检查设置的本地过期时间
-    private func checkLocalExpiredDate() {
+    // MARK: 检查设置的本地过期时间是否已到期
+    @discardableResult
+    private func checkLocalExpiredDatePassed() -> Bool {
         guard let localExpiredDate,
               localExpiredDate.timeIntervalSinceNow <= 0,
               let downloadUrl = appStoreUrl ?? offlineDownloadUrl else {
-            return
+            return false
         }
         showDateExpiredAlert(downloadUrl: downloadUrl)
+        return true
     }
     
     // MARK: - Private
@@ -156,7 +158,7 @@ extension YLUpdateManager {
         guard let appUpdateUrl else { return }
         let task = URLSession.shared.dataTask(with: URL(string: appUpdateUrl)!) { data, response, error in
             guard let data = data, error == nil else {
-                self.checkLocalExpiredDate()
+                self.checkLocalExpiredDatePassed()
                 return
             }
             do {
@@ -209,7 +211,9 @@ extension YLUpdateManager {
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async { [self] in
                 guard let data, error == nil else {
-                    checkLocalExpiredDate()
+                    if !checkLocalExpiredDatePassed() {
+                        showNew(version: appStoreVersion, info: updateInfo, background: background)
+                    }
                     return
                 }
                 
